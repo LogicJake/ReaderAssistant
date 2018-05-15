@@ -1,9 +1,14 @@
 package com.scy.readingassistant;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -13,10 +18,75 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener ,View.OnClickListener {
 
+
+    private List<HashMap<String, Object>> mListData = new ArrayList<HashMap<String, Object>>();
+    private SharedPreferences sharedPreferences ;
+    private SharedPreferences.Editor editor;
+    private ListView booklist;
+    private SimpleAdapter mSchedule;
+    public class Order implements Comparator<HashMap<String, Object>> {
+
+        @Override
+        public int compare(HashMap<String, Object> lhs, HashMap<String, Object> rhs) {
+            // TODO Auto-generated method stub
+            //按照时间顺序最新的在上面
+            long a = (Long) lhs.get("add_time");
+            long b = (Long) rhs.get("add_time");
+            long c = a - b;
+            if (c < 0) {
+                return 1;
+            } else if (c == 0) {
+                return 0;
+            } else {
+                return -1;
+            }
+        }
+
+    }
+
+    private Handler handler = new Handler() {
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch (msg.what) {
+                case 1:
+                    Collections.sort(mListData,new Order());
+                    String[] from = { "name", "path", "current_page", "total_page","author" ,"add_time"};
+                    // 列表项组件Id 数组
+                    int[] to = { R.id.item_name, R.id.item_path, R.id.item_current_page,
+                            R.id.item_total_page,R.id.item_author ,R.id.item_add_time};
+                    mSchedule = new SimpleAdapter(MainActivity.this,
+                            mListData,//数据来源
+                            R.layout.item_list,//ListItem的XML实现
+                            from,
+                            to);
+                    booklist.setAdapter(mSchedule);
+                    setListViewHeightBasedOnChildren(booklist);
+                    break;
+                case 2:
+                    Collections.sort(mListData,new Order());
+                    mSchedule.notifyDataSetChanged();
+                    setListViewHeightBasedOnChildren(booklist);
+                    break;
+            }
+        }
+    };
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -24,14 +94,11 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        sharedPreferences = getSharedPreferences("bookInfo", Context.MODE_PRIVATE);
+        editor = sharedPreferences.edit();
+
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        fab.setOnClickListener(this);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -41,6 +108,110 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        booklist = (ListView) findViewById(R.id.list_view);
+        getBookInfo();
+    }
+
+    public void getBookInfo(){
+        Set<String> set = new HashSet<String>(sharedPreferences.getStringSet("list", new HashSet<String>()));         //获取所有书籍
+        for (String uid : set) {
+            System.out.println(uid);
+            HashMap map = new HashMap<String,Object>();
+            map.put("add_time",sharedPreferences.getLong("add_time_"+uid,0));                       //添加时间
+            map.put("name",sharedPreferences.getString("name_"+uid,"书名没了？"));                       //添加时间
+            map.put("path",sharedPreferences.getString("path_"+uid,"路径没了？"));
+            map.put("current_page",sharedPreferences.getInt("current_page_"+uid,0));
+            map.put("total_page",sharedPreferences.getInt("total_page_"+uid,0));
+            map.put("author",sharedPreferences.getString("author_"+uid,"作者名没了？"));
+
+            mListData.add(map);
+        }
+        Message message = new Message();
+        message.what = 1;
+        handler.sendMessage(message);
+    }
+
+    public void setListViewHeightBasedOnChildren(ListView listView) {
+        // 获取ListView对应的Adapter
+        ListAdapter listAdapter = listView.getAdapter();
+        if (listAdapter == null) {
+            return;
+        }
+
+        int totalHeight = 0;
+        for (int i = 0, len = listAdapter.getCount(); i < len; i++) {
+            // listAdapter.getCount()返回数据项的数目
+            View listItem = listAdapter.getView(i, null, listView);
+            // 计算子项View 的宽高
+            listItem.measure(0, 0);
+            // 统计所有子项的总高度
+            totalHeight += listItem.getMeasuredHeight();
+        }
+
+        ViewGroup.LayoutParams params = listView.getLayoutParams();
+        params.height = totalHeight+ (listView.getDividerHeight() * (listAdapter.getCount() - 1));
+        // listView.getDividerHeight()获取子项间分隔符占用的高度
+        // params.height最后得到整个ListView完整显示需要的高度
+        listView.setLayoutParams(params);
+    }
+
+    public static String getUUID(){
+        UUID uuid=UUID.randomUUID();
+        String str = uuid.toString();
+        String uuidStr=str.replace("-", "");
+        return uuidStr;
+    }
+
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.fab:
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("*/*");
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                startActivityForResult(intent,1);
+                break;
+            default:
+                break;
+        }
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == 1) {
+                Uri uri = data.getData();
+                String path = uri.getPath().toString();
+                String[] aa = path.split("/");
+                aa = aa[aa.length-1].split("\\.");
+                String name = aa[0];
+                BookInfo book = new BookInfo(System.currentTimeMillis(),name,path,0,0,"未知");
+                Set<String> set = new HashSet<String>(sharedPreferences.getStringSet("list", new HashSet<String>()));         //获取所有书籍
+                String uuid = getUUID();
+                set.add(uuid);
+                editor.putString("name_"+uuid,book.getName());
+                editor.putLong("add_time_"+uuid,book.getAddTime());
+                editor.putString("path_"+uuid,book.getPath());
+                editor.putString("author_"+uuid,book.getAuthor());
+                editor.putInt("current_page_"+uuid,book.getCurrentPage());
+                editor.putInt("total_page_"+uuid,book.getTotalPage());
+                editor.putStringSet("list",set);
+                editor.commit();
+
+                HashMap map = new HashMap<String,Object>();
+                map.put("add_time",book.getAddTime());                       //添加时间
+                map.put("name",book.getName());                       //添加时间
+                map.put("path",book.getPath());
+                map.put("current_page",book.getCurrentPage());
+                map.put("total_page",book.getTotalPage());
+                map.put("author",book.getAuthor());
+
+
+                mListData.add(map);
+                Message message = new Message();
+                message.what = 2;
+                handler.sendMessage(message);
+            }
+        }
     }
 
     @Override
@@ -81,7 +252,7 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
+        if (id == R.id.local) {
             Intent intent = new Intent(MainActivity.this,PdfViwerActivity.class);
             startActivity(intent);
         } else if (id == R.id.nav_gallery) {
