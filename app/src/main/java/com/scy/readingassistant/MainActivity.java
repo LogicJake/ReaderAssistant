@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.design.widget.FloatingActionButton;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -23,6 +24,7 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -35,7 +37,7 @@ import java.util.UUID;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener ,View.OnClickListener {
 
-
+    private static final String TAG = "MainActivity";
     private List<HashMap<String, Object>> mListData = new ArrayList<HashMap<String, Object>>();
     private SharedPreferences sharedPreferences ;
     private SharedPreferences.Editor editor;
@@ -64,15 +66,17 @@ public class MainActivity extends AppCompatActivity
     private Handler handler = new Handler() {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
+            List<HashMap<String, Object>> recentList;
             switch (msg.what) {
                 case 1:
                     Collections.sort(mListData,new Order());
+                    recentList = mListData.subList(0,5);
                     String[] from = { "name", "path", "current_page", "total_page","author" ,"add_time"};
                     // 列表项组件Id 数组
                     int[] to = { R.id.item_name, R.id.item_path, R.id.item_current_page,
                             R.id.item_total_page,R.id.item_author ,R.id.item_add_time};
                     mSchedule = new SimpleAdapter(MainActivity.this,
-                            mListData,//数据来源
+                            recentList,//数据来源
                             R.layout.item_list,//ListItem的XML实现
                             from,
                             to);
@@ -81,6 +85,7 @@ public class MainActivity extends AppCompatActivity
                     break;
                 case 2:
                     Collections.sort(mListData,new Order());
+                    recentList = mListData.subList(0,5);
                     mSchedule.notifyDataSetChanged();
                     setListViewHeightBasedOnChildren(booklist);
                     break;
@@ -93,6 +98,8 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        setTitle("最近阅读");
 
         sharedPreferences = getSharedPreferences("bookInfo", Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();
@@ -111,6 +118,8 @@ public class MainActivity extends AppCompatActivity
 
         booklist = (ListView) findViewById(R.id.list_view);
         getBookInfo();
+
+        createMyDir();
     }
 
     public void getBookInfo(){
@@ -185,7 +194,7 @@ public class MainActivity extends AppCompatActivity
                 aa = aa[aa.length-1].split("\\.");
                 String name = aa[0];
                 BookInfo book = new BookInfo(System.currentTimeMillis(),name,path,0,0,"未知");
-                Set<String> set = new HashSet<String>(sharedPreferences.getStringSet("list", new HashSet<String>()));         //获取所有书籍
+                Set<String> set = new HashSet<String>(sharedPreferences.getStringSet("list", new HashSet<String>()));
                 String uuid = getUUID();
                 set.add(uuid);
                 editor.putString("name_"+uuid,book.getName());
@@ -270,5 +279,24 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public void createMyDir(){          //pdf统一存储位置
+        String dirPath = "/storage/emulated/0/ReaderAssistant/book";
+        File dir = new File(dirPath);
+        if (dir.exists()) {
+            Log.w(TAG,"The directory [ " + dirPath + " ] has already exists");
+            return ;
+        }
+        if (!dirPath.endsWith(File.separator)) {//不是以 路径分隔符 "/" 结束，则添加路径分隔符 "/"
+            dirPath = dirPath + File.separator;
+        }
+        //创建文件夹
+        if (dir.mkdirs()) {
+            Log.d(TAG,"create directory [ "+ dirPath + " ] success");
+            return;
+        }
+        Log.e(TAG,"create directory [ "+ dirPath + " ] failed");
+        return;
     }
 }
