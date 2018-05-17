@@ -2,7 +2,9 @@ package com.scy.readingassistant;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -12,6 +14,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -46,9 +49,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.Consumer;
+
 
 import static com.scy.readingassistant.Util.*;
 
@@ -60,6 +61,7 @@ public class MainActivity extends AppCompatActivity
     List<HashMap<String, Object>> recentList;
     private SwipeMenuListView booklist;
     private MyAdapter myAdapter;
+    private String uid;
 
     public class Order implements Comparator<HashMap<String, Object>> {
 
@@ -87,6 +89,7 @@ public class MainActivity extends AppCompatActivity
             switch (msg.what) {
                 case 1:
                     Collections.sort(mListData,new Order());
+                    System.out.println(mListData);
                     if (mListData.size()>5)
                         recentList = mListData.subList(0,5);
                     else
@@ -160,6 +163,32 @@ public class MainActivity extends AppCompatActivity
         booklist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                File file = new File((String) mListData.get(i).get("path"));
+                if(!file.exists()){
+                    uid = (String)mListData.get(i).get("uid");
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                    builder.setTitle("文件不存在");
+                    builder.setMessage("文件不存在，按导入按钮重新选择文件位置");
+                    builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        }
+                    });
+                    builder.setPositiveButton("导入", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            MultPermission(context);
+                            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                            intent.setType("*/*");
+                            intent.addCategory(Intent.CATEGORY_OPENABLE);
+                            startActivityForResult(intent,3);
+                        }
+                    });
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+                    return;
+                }
                 Intent intent = new Intent(MainActivity.this, PdfViwerActivity.class);
                 intent.putExtra("name", (String) mListData.get(i).get("name"));
                 intent.putExtra("path", (String) mListData.get(i).get("path"));
@@ -210,7 +239,7 @@ public class MainActivity extends AppCompatActivity
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.fab:
-                MultPermission();
+                MultPermission(context);
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.setType("*/*");
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -223,14 +252,19 @@ public class MainActivity extends AppCompatActivity
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK) {
-            if (requestCode == 1) {
-                Uri uri = data.getData();
-                String path = uri.getPath().toString();
-                String[] aa = path.split("/");
+            Uri uri = data.getData();
+            String path = uri.getPath().toString();
+            String[] aa = path.split("/");
+            path = "/storage/emulated/0"+path.substring(path.indexOf("/",1));
 
-                path = "/storage/emulated/0"+path.substring(path.indexOf("/",1));
+            if (requestCode == 1) {
+
                 aa = aa[aa.length-1].split("\\.");
                 String name = aa[0];
+                if(!aa[aa.length-1].equals("pdf")){
+                    Toast.makeText(context,"只支持添加pdf文件",Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 BookInfo book = new BookInfo(System.currentTimeMillis(),name,path,1,1,"未知");
                 String uid = addBook(context,book);          //存储
                 HashMap map = new HashMap<String,Object>();
@@ -249,11 +283,6 @@ public class MainActivity extends AppCompatActivity
                 handler.sendMessage(message);
             }
             else if (requestCode == 2){
-                Uri uri = data.getData();
-                String path = uri.getPath().toString();
-                String[] aa = path.split("/");
-                path = "/storage/emulated/0"+path.substring(path.indexOf("/",1));
-
                 try {
                     File file = new File(path);
                     FileInputStream inputStream = new FileInputStream(file);
@@ -270,6 +299,12 @@ public class MainActivity extends AppCompatActivity
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                Toast.makeText(context,"导入备份成功",Toast.LENGTH_SHORT).show();
+                getBookInfo();
+            }
+            else if(requestCode == 3){
+                updatePath(context,uid,path);
+                getBookInfo();
             }
         }
     }
@@ -311,22 +346,21 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-
         if (id == R.id.local) {
             Intent intent = new Intent(MainActivity.this,LocalBook.class);
             startActivity(intent);
         } else if (id == R.id.nav_gallery) {
 
         } else if (id == R.id.nav_slideshow) {      //导入备份
-            MultPermission();
+            MultPermission(context);
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
             intent.setType("*/*");
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             startActivityForResult(intent,2);
-            Toast.makeText(context,"导入备份成功",Toast.LENGTH_SHORT).show();
+
 
         } else if (id == R.id.nav_manage) {         //备份
-            MultPermission();
+            MultPermission(context);
             String filePath = "/storage/emulated/0/ReaderAssistant/bak.txt";        //备份路径
             File file = new File(filePath);
             try {
@@ -335,7 +369,7 @@ public class MainActivity extends AppCompatActivity
                 }
                 else
                     file.createNewFile();
-                String data = bakup(context);
+                String data = backup(context);
                 byte[] buffer = data.getBytes();
                 FileOutputStream fos = new FileOutputStream(file);
                 fos.write(buffer, 0, buffer.length);
@@ -356,23 +390,4 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    private void MultPermission(){
-        RxPermissions rxPermissions = new RxPermissions(MainActivity.this);
-        rxPermissions.requestEach(
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                Manifest.permission.READ_EXTERNAL_STORAGE)//权限名称，多个权限之间逗号分隔开
-                .subscribe(new io.reactivex.functions.Consumer<Permission>(){
-                    @Override
-                    public void accept(Permission permission){
-                        if(permission.name.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE) && !permission.granted){
-                            Log.e("MainActivity","权限被拒绝");
-                            PremissionDialog.showMissingPermissionDialog(context,getString(R.string.LACK_RECORD_AUDIO));
-                        }
-                        if(permission.name.equals(Manifest.permission.READ_EXTERNAL_STORAGE) && !permission.granted){
-                            Log.e("MainActivity","权限被拒绝");
-                            PremissionDialog.showMissingPermissionDialog(context,getString(R.string.LACK_RECORD_AUDIO));
-                        }
-                    }
-                });
-    }
 }

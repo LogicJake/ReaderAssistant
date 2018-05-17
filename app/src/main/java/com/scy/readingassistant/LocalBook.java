@@ -2,6 +2,7 @@ package com.scy.readingassistant;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -9,6 +10,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,20 +19,26 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.baoyz.swipemenulistview.SwipeMenu;
 import com.baoyz.swipemenulistview.SwipeMenuCreator;
 import com.baoyz.swipemenulistview.SwipeMenuItem;
 import com.baoyz.swipemenulistview.SwipeMenuListView;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
+import static com.scy.readingassistant.Util.MultPermission;
 import static com.scy.readingassistant.Util.addBook;
 import static com.scy.readingassistant.Util.deleteBook;
 import static com.scy.readingassistant.Util.getAllBook;
+import static com.scy.readingassistant.Util.rebulid;
+import static com.scy.readingassistant.Util.updatePath;
 
 public class LocalBook extends AppCompatActivity implements View.OnClickListener{
     private Context context = this;
@@ -38,11 +46,14 @@ public class LocalBook extends AppCompatActivity implements View.OnClickListener
     private List<HashMap<String, Object>> mListData;
     private SwipeMenuListView booklist;
     private MyAdapter myAdapter;
+    private String uid;
+
 
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.fab:
+                MultPermission(context);
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.setType("*/*");
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -134,6 +145,32 @@ public class LocalBook extends AppCompatActivity implements View.OnClickListener
         booklist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                File file = new File((String) mListData.get(i).get("path"));
+                if(!file.exists()){
+                    uid = (String)mListData.get(i).get("uid");
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                    builder.setTitle("文件不存在");
+                    builder.setMessage("文件不存在，按导入按钮重新选择文件位置");
+                    builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        }
+                    });
+                    builder.setPositiveButton("导入", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            MultPermission(context);
+                            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                            intent.setType("*/*");
+                            intent.addCategory(Intent.CATEGORY_OPENABLE);
+                            startActivityForResult(intent,3);
+                        }
+                    });
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+                    return;
+                }
                 Intent intent = new Intent(LocalBook.this, PdfViwerActivity.class);
                 intent.putExtra("name", (String) mListData.get(i).get("name"));
                 intent.putExtra("path", (String) mListData.get(i).get("path"));
@@ -160,18 +197,21 @@ public class LocalBook extends AppCompatActivity implements View.OnClickListener
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK) {
-            if (requestCode == 1) {
-                Uri uri = data.getData();
-                String path = uri.getPath().toString();
-                String[] aa = path.split("/");
+            Uri uri = data.getData();
+            String path = uri.getPath().toString();
+            String[] aa = path.split("/");
+            path = "/storage/emulated/0"+path.substring(path.indexOf("/",1));
 
-                path = "/storage/emulated/0"+path.substring(path.indexOf("/",1));
+            if (requestCode == 1) {
+
                 aa = aa[aa.length-1].split("\\.");
                 String name = aa[0];
+                if(!aa[aa.length-1].equals("pdf")){
+                    Toast.makeText(context,"只支持添加pdf文件",Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 BookInfo book = new BookInfo(System.currentTimeMillis(),name,path,1,1,"未知");
-
                 String uid = addBook(context,book);          //存储
-
                 HashMap map = new HashMap<String,Object>();
 
                 map.put("uid",uid);
@@ -187,9 +227,32 @@ public class LocalBook extends AppCompatActivity implements View.OnClickListener
                 message.what = 1;
                 handler.sendMessage(message);
             }
+            else if (requestCode == 2){
+                try {
+                    File file = new File(path);
+                    FileInputStream inputStream = new FileInputStream(file);
+                    byte temp[] = new byte[1024];
+                    StringBuilder sb = new StringBuilder("");
+                    int len = 0;
+                    while ((len = inputStream.read(temp)) > 0){
+                        sb.append(new String(temp, 0, len));
+                    }
+                    Log.d("msg", "readSaveFile: \n" + sb.toString());
+                    rebulid(context,sb.toString());
+                    inputStream.close();
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                Toast.makeText(context,"导入备份成功",Toast.LENGTH_SHORT).show();
+                getBookInfo();
+            }
+            else if(requestCode == 3){
+                updatePath(context,uid,path);
+                getBookInfo();
+            }
         }
     }
-
 
     public void setListViewHeightBasedOnChildren(ListView listView) {
         // 获取ListView对应的Adapter

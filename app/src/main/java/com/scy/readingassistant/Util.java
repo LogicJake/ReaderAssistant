@@ -1,8 +1,13 @@
 package com.scy.readingassistant;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
+
+import com.tbruyelle.rxpermissions2.Permission;
+import com.tbruyelle.rxpermissions2.RxPermissions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -111,9 +116,7 @@ public class Util {
         editor.commit();
     }
 
-    public static String bakup(Context context)
-    {
-        SharedPreferences sharedPreferences = context.getSharedPreferences("bookInfo", Context.MODE_PRIVATE);
+    public static String backup(Context context) {
         JSONArray jsonArray = new JSONArray(getAllBook(context));
         Log.e(TAG,jsonArray.toString());
         return jsonArray.toString();
@@ -147,5 +150,32 @@ public class Util {
 
     }
 
+    public static void updatePath(Context context,String uuid,String path){
+        SharedPreferences sharedPreferences = context.getSharedPreferences("bookInfo", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.putString("path_"+uuid,path).commit();
+        System.out.println(sharedPreferences.getString("path_"+uuid,"as"));
+    }
+
+    public static void MultPermission(final Context context){
+        RxPermissions rxPermissions = new RxPermissions((Activity) context);
+        rxPermissions.requestEach(
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE)//权限名称，多个权限之间逗号分隔开
+                .subscribe(new io.reactivex.functions.Consumer<Permission>(){
+                    @Override
+                    public void accept(Permission permission){
+                        if(permission.name.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE) && !permission.granted){
+                            Log.e("MainActivity","权限被拒绝");
+                            PremissionDialog.showMissingPermissionDialog(context,context.getString(R.string.LACK_RECORD_AUDIO));
+                        }
+                        if(permission.name.equals(Manifest.permission.READ_EXTERNAL_STORAGE) && !permission.granted){
+                            Log.e("MainActivity","权限被拒绝");
+                            PremissionDialog.showMissingPermissionDialog(context,context.getString(R.string.LACK_RECORD_AUDIO));
+                        }
+                    }
+                });
+    }
 
 }
