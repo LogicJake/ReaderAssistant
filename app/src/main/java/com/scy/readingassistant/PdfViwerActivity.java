@@ -3,6 +3,7 @@ package com.scy.readingassistant;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.media.Image;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Message;
 import android.support.v4.view.GravityCompat;
@@ -19,6 +20,7 @@ import android.view.View;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.github.barteksc.pdfviewer.*;
@@ -27,16 +29,16 @@ import com.github.barteksc.pdfviewer.listener.OnPageScrollListener;
 
 import java.io.File;
 
+import static com.scy.readingassistant.Util.MultPermission;
 import static com.scy.readingassistant.Util.updatePage;
 
 
-public class PdfViwerActivity extends AppCompatActivity{
+public class PdfViwerActivity extends AppCompatActivity implements View.OnClickListener {
 
     private Context context = this;
     private String uid;
     private static final boolean AUTO_HIDE = true;
-
-
+    private ImageButton jump;
     private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
 
     private static final int UI_ANIMATION_DELAY = 300;
@@ -108,6 +110,8 @@ public class PdfViwerActivity extends AppCompatActivity{
 
         current_page = (EditText) findViewById(R.id.current_page);
         total_page = (TextView) findViewById(R.id.total_page);
+        jump = (ImageButton)findViewById(R.id.jump);
+        jump.setOnClickListener(this);
         initPdf();
     }
 
@@ -210,5 +214,17 @@ public class PdfViwerActivity extends AppCompatActivity{
     private void delayedHide(int delayMillis) {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.jump:
+                System.out.println(Integer.parseInt(current_page.getText().toString())-1);
+                pdfView.jumpTo(Integer.parseInt(current_page.getText().toString())-1);
+                break;
+            default:
+                break;
+        }
     }
 }

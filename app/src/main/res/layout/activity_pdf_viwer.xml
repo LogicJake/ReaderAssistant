@@ -34,16 +34,17 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:gravity="center_horizontal"
                 android:focusable="true"
                 android:focusableInTouchMode="true"
+                android:gravity="center_horizontal"
                 android:orientation="horizontal">
+
                 <EditText
                     android:id="@+id/current_page"
-                    android:layout_width="wrap_content"
                     style="?metaButtonBarButtonStyle"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="1"/>
+                    android:text="1" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -57,6 +58,13 @@
                     android:layout_height="wrap_content"
                     android:text="10" />
 
+                <ImageButton
+                    android:id="@+id/jump"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="20dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/jump" />
             </LinearLayout>
 
         </LinearLayout>
