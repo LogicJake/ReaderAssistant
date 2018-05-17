@@ -22,6 +22,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -54,7 +55,7 @@ public class MainActivity extends AppCompatActivity
     List<HashMap<String, Object>> recentList;
     private SwipeMenuListView booklist;
     private MyAdapter myAdapter;
-    
+
     public class Order implements Comparator<HashMap<String, Object>> {
 
         @Override
@@ -116,6 +117,7 @@ public class MainActivity extends AppCompatActivity
 
         initListView();     //设置书本listview
         getBookInfo();
+
         createMyDir();
     }
 
@@ -125,15 +127,10 @@ public class MainActivity extends AppCompatActivity
         SwipeMenuCreator creater = new SwipeMenuCreator() {
             @Override
             public void create(SwipeMenu menu) {
-                //create删除item
                 SwipeMenuItem deleteItem = new SwipeMenuItem(context);
-                // set item background
                 deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9, 0x3F, 0x25)));
-                // set item width
                 deleteItem.setWidth(200);
-                // set a icon
                 deleteItem.setIcon(R.drawable.ic_delete);
-                // add to menu
                 menu.addMenuItem(deleteItem);
             }
         };
@@ -154,10 +151,29 @@ public class MainActivity extends AppCompatActivity
                 return false;
             }
         });
+
+        booklist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Intent intent = new Intent(MainActivity.this, PdfViwerActivity.class);
+                intent.putExtra("name", (String) mListData.get(i).get("name"));
+                intent.putExtra("path", (String) mListData.get(i).get("path"));
+                intent.putExtra("current_page",(int)mListData.get(i).get("current_page"));
+                intent.putExtra("uid",(String)mListData.get(i).get("uid"));
+                startActivity(intent);
+            }
+        });
+    }
+
+    public void onRestart(){
+        Log.e(TAG,"onRestart");
+        getBookInfo();
+        super.onRestart();
     }
 
     public void getBookInfo(){
         mListData = getAllBook(context);
+
         Message message = new Message();
         message.what = 1;
         handler.sendMessage(message);
@@ -205,9 +221,11 @@ public class MainActivity extends AppCompatActivity
                 Uri uri = data.getData();
                 String path = uri.getPath().toString();
                 String[] aa = path.split("/");
+
+                path = "/storage/emulated/0"+path.substring(path.indexOf("/",1));
                 aa = aa[aa.length-1].split("\\.");
                 String name = aa[0];
-                BookInfo book = new BookInfo(System.currentTimeMillis(),name,path,0,0,"未知");
+                BookInfo book = new BookInfo(System.currentTimeMillis(),name,path,1,1,"未知");
 
                 String uid = addBook(context,book);          //存储
 

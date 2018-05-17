@@ -69,7 +69,6 @@ public class Util {
 
         Set<String> set = new HashSet<String>(sharedPreferences.getStringSet("list", new HashSet<String>()));         //获取所有书籍
         for (String uid : set) {
-            System.out.println(uid);
             HashMap map = new HashMap<String,Object>();
             map.put("uid",uid);                       //添加时间
             map.put("add_time",sharedPreferences.getLong("add_time_"+uid,0));                       //添加时间
@@ -100,5 +99,14 @@ public class Util {
         editor.putStringSet("list",set);
         editor.commit();
         return uuid;
+    }
+
+    public static void updatePage(Context context,String uuid,int currentpage,int totalpage){
+        SharedPreferences sharedPreferences = context.getSharedPreferences("bookInfo", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.putInt("current_page_"+uuid,currentpage);
+        editor.putInt("total_page_"+uuid,totalpage);
+        editor.commit();
     }
 }

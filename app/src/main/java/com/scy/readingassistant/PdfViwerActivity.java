@@ -1,8 +1,12 @@
 package com.scy.readingassistant;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.Intent;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Message;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -21,9 +25,15 @@ import com.github.barteksc.pdfviewer.*;
 import com.github.barteksc.pdfviewer.listener.OnLoadCompleteListener;
 import com.github.barteksc.pdfviewer.listener.OnPageScrollListener;
 
+import java.io.File;
+
+import static com.scy.readingassistant.Util.updatePage;
+
 
 public class PdfViwerActivity extends AppCompatActivity{
 
+    private Context context = this;
+    private String uid;
     private static final boolean AUTO_HIDE = true;
 
 
@@ -109,22 +119,37 @@ public class PdfViwerActivity extends AppCompatActivity{
             }
         });
 
-        pdfView.fromAsset("test.pdf")
-                .defaultPage(10)
+        Intent intent = getIntent();
+        Bundle bundle = intent.getExtras();
+        int currentpage = bundle.getInt("current_page");
+        String name = bundle.getString("name");
+        String path = bundle.getString("path");
+        uid = bundle.getString("uid");
+        setTitle(name);
+        File file = new File(path);
+        pdfView.fromFile(file)
+                .defaultPage(currentpage-1)
                 .onLoad(new OnLoadCompleteListener() {
                     @Override
                     public void loadComplete(int nbPages) {
-                        current_page.setText(Integer.toString(pdfView.getCurrentPage()));
+                        current_page.setText(Integer.toString(pdfView.getCurrentPage()+1));
                         total_page.setText(Integer.toString(pdfView.getPageCount()));
                     }
                 })
                 .onPageScroll(new OnPageScrollListener() {
                     @Override
                     public void onPageScrolled(int page, float positionOffset) {
-                        current_page.setText(Integer.toString(page));
+                        current_page.setText(Integer.toString(page+1));
                     }
                 })
                 .load();
+    }
+
+    public void onPause() {
+        System.out.println(current_page.getText().toString());
+        System.out.println(total_page.getText().toString());
+        updatePage(context,uid,Integer.parseInt(current_page.getText().toString()),Integer.parseInt(total_page.getText().toString()));
+        super.onPause();
     }
 
     @Override
@@ -182,10 +207,6 @@ public class PdfViwerActivity extends AppCompatActivity{
         mHideHandler.postDelayed(mShowPart2Runnable, UI_ANIMATION_DELAY);
     }
 
-    /**
-     * Schedules a call to hide() in delay milliseconds, canceling any
-     * previously scheduled calls.
-     */
     private void delayedHide(int delayMillis) {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
