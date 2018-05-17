@@ -4,6 +4,10 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -50,7 +54,6 @@ public class Util {
         set.remove(uuid);
 
         editor.remove("name_"+uuid);
-        editor.remove("name_"+uuid);
         editor.remove("add_time_"+uuid);
         editor.remove("path_"+uuid);
         editor.remove("author_"+uuid);
@@ -63,7 +66,6 @@ public class Util {
 
     public static List<HashMap<String, Object>> getAllBook(Context context){
         SharedPreferences sharedPreferences = context.getSharedPreferences("bookInfo", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
 
         List<HashMap<String, Object>> booklist = new ArrayList<HashMap<String, Object>>();
 
@@ -90,7 +92,6 @@ public class Util {
         String uuid = getUUID();
         set.add(uuid);
         editor.putString("name_"+uuid,book.getName());
-        editor.putString("name_"+uuid,book.getName());
         editor.putLong("add_time_"+uuid,book.getAddTime());
         editor.putString("path_"+uuid,book.getPath());
         editor.putString("author_"+uuid,book.getAuthor());
@@ -109,4 +110,42 @@ public class Util {
         editor.putInt("total_page_"+uuid,totalpage);
         editor.commit();
     }
+
+    public static String bakup(Context context)
+    {
+        SharedPreferences sharedPreferences = context.getSharedPreferences("bookInfo", Context.MODE_PRIVATE);
+        JSONArray jsonArray = new JSONArray(getAllBook(context));
+        Log.e(TAG,jsonArray.toString());
+        return jsonArray.toString();
+    }
+
+    public static void rebulid(Context context,String data){
+        SharedPreferences sharedPreferences = context.getSharedPreferences("bookInfo", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        Set<String> set = new HashSet<String>(sharedPreferences.getStringSet("list", new HashSet<String>()));         //获取所有书籍
+
+        try {
+            JSONArray jsonArray = new JSONArray(data);
+            for(int i = 0; i<jsonArray.length(); i++){
+                JSONObject tmp = jsonArray.getJSONObject(i);
+                String uuid = tmp.getString("uid");
+
+                editor.putString("name_"+uuid,tmp.getString("name"));
+                editor.putLong("add_time_"+uuid,tmp.getLong("add_time"));
+                editor.putString("path_"+uuid,tmp.getString("path"));
+                editor.putString("author_"+uuid,tmp.getString("author"));
+                editor.putInt("current_page_"+uuid,tmp.getInt("current_page"));
+                editor.putInt("total_page_"+uuid,tmp.getInt("total_page"));
+                set.add(uuid);
+            }
+            editor.putStringSet("list",set);
+            editor.commit();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
 }

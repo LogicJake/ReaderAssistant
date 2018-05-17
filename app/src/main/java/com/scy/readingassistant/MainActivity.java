@@ -26,6 +26,7 @@ import android.widget.AdapterView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.Toast;
 
 import com.baoyz.swipemenulistview.SwipeMenu;
 import com.baoyz.swipemenulistview.SwipeMenuCreator;
@@ -33,6 +34,9 @@ import com.baoyz.swipemenulistview.SwipeMenuItem;
 import com.baoyz.swipemenulistview.SwipeMenuListView;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -43,9 +47,11 @@ import java.util.Set;
 import java.util.UUID;
 
 import static com.scy.readingassistant.Util.addBook;
+import static com.scy.readingassistant.Util.bakup;
 import static com.scy.readingassistant.Util.createMyDir;
 import static com.scy.readingassistant.Util.deleteBook;
 import static com.scy.readingassistant.Util.getAllBook;
+import static com.scy.readingassistant.Util.rebulid;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener ,View.OnClickListener {
@@ -226,9 +232,7 @@ public class MainActivity extends AppCompatActivity
                 aa = aa[aa.length-1].split("\\.");
                 String name = aa[0];
                 BookInfo book = new BookInfo(System.currentTimeMillis(),name,path,1,1,"未知");
-
                 String uid = addBook(context,book);          //存储
-
                 HashMap map = new HashMap<String,Object>();
 
                 map.put("uid",uid);
@@ -243,6 +247,29 @@ public class MainActivity extends AppCompatActivity
                 Message message = new Message();
                 message.what = 1;
                 handler.sendMessage(message);
+            }
+            else if (requestCode == 2){
+                Uri uri = data.getData();
+                String path = uri.getPath().toString();
+                String[] aa = path.split("/");
+                path = "/storage/emulated/0"+path.substring(path.indexOf("/",1));
+
+                try {
+                    File file = new File(path);
+                    FileInputStream inputStream = new FileInputStream(file);
+                    byte temp[] = new byte[1024];
+                    StringBuilder sb = new StringBuilder("");
+                    int len = 0;
+                    while ((len = inputStream.read(temp)) > 0){
+                        sb.append(new String(temp, 0, len));
+                    }
+                    Log.d("msg", "readSaveFile: \n" + sb.toString());
+                    rebulid(context,sb.toString());
+                    inputStream.close();
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -290,10 +317,31 @@ public class MainActivity extends AppCompatActivity
             startActivity(intent);
         } else if (id == R.id.nav_gallery) {
 
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
+        } else if (id == R.id.nav_slideshow) {      //导入备份
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("*/*");
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            startActivityForResult(intent,2);
+        } else if (id == R.id.nav_manage) {         //备份
+            String filePath = "/storage/emulated/0/ReaderAssistant/bak.txt";        //备份路径
+            File file = new File(filePath);
+            try {
+                if (file.exists()) {
+                    Log.w(TAG,"The directory [ " + filePath + " ] has already exists");
+                }
+                else
+                    file.createNewFile();
+                String data = bakup(context);
+                byte[] buffer = data.getBytes();
+                FileOutputStream fos = new FileOutputStream(file);
+                fos.write(buffer, 0, buffer.length);
+                fos.flush();
+                fos.close();
+            }catch (Exception e)
+            {
+                System.out.println(e);
+            }
+            Toast.makeText(context,"备份成功",Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {
