@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -24,6 +26,11 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
+import com.baoyz.swipemenulistview.SwipeMenu;
+import com.baoyz.swipemenulistview.SwipeMenuCreator;
+import com.baoyz.swipemenulistview.SwipeMenuItem;
+import com.baoyz.swipemenulistview.SwipeMenuListView;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,15 +41,20 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static com.scy.readingassistant.Util.addBook;
+import static com.scy.readingassistant.Util.createMyDir;
+import static com.scy.readingassistant.Util.deleteBook;
+import static com.scy.readingassistant.Util.getAllBook;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener ,View.OnClickListener {
-
+    private Context context = this;
     private static final String TAG = "MainActivity";
-    private List<HashMap<String, Object>> mListData = new ArrayList<HashMap<String, Object>>();
-    private SharedPreferences sharedPreferences ;
-    private SharedPreferences.Editor editor;
-    private ListView booklist;
-    private SimpleAdapter mSchedule;
+    private List<HashMap<String, Object>> mListData;
+    List<HashMap<String, Object>> recentList;
+    private SwipeMenuListView booklist;
+    private MyAdapter myAdapter;
+    
     public class Order implements Comparator<HashMap<String, Object>> {
 
         @Override
@@ -66,29 +78,18 @@ public class MainActivity extends AppCompatActivity
     private Handler handler = new Handler() {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            List<HashMap<String, Object>> recentList;
             switch (msg.what) {
                 case 1:
                     Collections.sort(mListData,new Order());
-                    recentList = mListData.subList(0,5);
-                    String[] from = { "name", "path", "current_page", "total_page","author" ,"add_time"};
-                    // 列表项组件Id 数组
-                    int[] to = { R.id.item_name, R.id.item_path, R.id.item_current_page,
-                            R.id.item_total_page,R.id.item_author ,R.id.item_add_time};
-                    mSchedule = new SimpleAdapter(MainActivity.this,
-                            recentList,//数据来源
-                            R.layout.item_list,//ListItem的XML实现
-                            from,
-                            to);
-                    booklist.setAdapter(mSchedule);
+                    if (mListData.size()>5)
+                        recentList = mListData.subList(0,5);
+                    else
+                        recentList = mListData;
+                    myAdapter = new MyAdapter(context,recentList);
+                    booklist.setAdapter(myAdapter);
                     setListViewHeightBasedOnChildren(booklist);
                     break;
-                case 2:
-                    Collections.sort(mListData,new Order());
-                    recentList = mListData.subList(0,5);
-                    mSchedule.notifyDataSetChanged();
-                    setListViewHeightBasedOnChildren(booklist);
-                    break;
+
             }
         }
     };
@@ -100,9 +101,6 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
 
         setTitle("最近阅读");
-
-        sharedPreferences = getSharedPreferences("bookInfo", Context.MODE_PRIVATE);
-        editor = sharedPreferences.edit();
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(this);
@@ -116,26 +114,50 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        booklist = (ListView) findViewById(R.id.list_view);
+        initListView();     //设置书本listview
         getBookInfo();
-
         createMyDir();
     }
 
-    public void getBookInfo(){
-        Set<String> set = new HashSet<String>(sharedPreferences.getStringSet("list", new HashSet<String>()));         //获取所有书籍
-        for (String uid : set) {
-            System.out.println(uid);
-            HashMap map = new HashMap<String,Object>();
-            map.put("add_time",sharedPreferences.getLong("add_time_"+uid,0));                       //添加时间
-            map.put("name",sharedPreferences.getString("name_"+uid,"书名没了？"));                       //添加时间
-            map.put("path",sharedPreferences.getString("path_"+uid,"路径没了？"));
-            map.put("current_page",sharedPreferences.getInt("current_page_"+uid,0));
-            map.put("total_page",sharedPreferences.getInt("total_page_"+uid,0));
-            map.put("author",sharedPreferences.getString("author_"+uid,"作者名没了？"));
+    public void initListView(){
+        booklist = (SwipeMenuListView) findViewById(R.id.list_view);
 
-            mListData.add(map);
-        }
+        SwipeMenuCreator creater = new SwipeMenuCreator() {
+            @Override
+            public void create(SwipeMenu menu) {
+                //create删除item
+                SwipeMenuItem deleteItem = new SwipeMenuItem(context);
+                // set item background
+                deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9, 0x3F, 0x25)));
+                // set item width
+                deleteItem.setWidth(200);
+                // set a icon
+                deleteItem.setIcon(R.drawable.ic_delete);
+                // add to menu
+                menu.addMenuItem(deleteItem);
+            }
+        };
+        // set creator
+        booklist.setMenuCreator(creater);
+
+        booklist.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
+                switch (index) {
+                    case 0:
+                        deleteBook(context,(String)mListData.get(position).get("uid"));
+                        mListData.remove(position);
+                        Message message = new Message();
+                        message.what = 1;
+                        handler.sendMessage(message);
+                }
+                return false;
+            }
+        });
+    }
+
+    public void getBookInfo(){
+        mListData = getAllBook(context);
         Message message = new Message();
         message.what = 1;
         handler.sendMessage(message);
@@ -150,7 +172,6 @@ public class MainActivity extends AppCompatActivity
 
         int totalHeight = 0;
         for (int i = 0, len = listAdapter.getCount(); i < len; i++) {
-            // listAdapter.getCount()返回数据项的数目
             View listItem = listAdapter.getView(i, null, listView);
             // 计算子项View 的宽高
             listItem.measure(0, 0);
@@ -163,13 +184,6 @@ public class MainActivity extends AppCompatActivity
         // listView.getDividerHeight()获取子项间分隔符占用的高度
         // params.height最后得到整个ListView完整显示需要的高度
         listView.setLayoutParams(params);
-    }
-
-    public static String getUUID(){
-        UUID uuid=UUID.randomUUID();
-        String str = uuid.toString();
-        String uuidStr=str.replace("-", "");
-        return uuidStr;
     }
 
     public void onClick(View view) {
@@ -194,19 +208,12 @@ public class MainActivity extends AppCompatActivity
                 aa = aa[aa.length-1].split("\\.");
                 String name = aa[0];
                 BookInfo book = new BookInfo(System.currentTimeMillis(),name,path,0,0,"未知");
-                Set<String> set = new HashSet<String>(sharedPreferences.getStringSet("list", new HashSet<String>()));
-                String uuid = getUUID();
-                set.add(uuid);
-                editor.putString("name_"+uuid,book.getName());
-                editor.putLong("add_time_"+uuid,book.getAddTime());
-                editor.putString("path_"+uuid,book.getPath());
-                editor.putString("author_"+uuid,book.getAuthor());
-                editor.putInt("current_page_"+uuid,book.getCurrentPage());
-                editor.putInt("total_page_"+uuid,book.getTotalPage());
-                editor.putStringSet("list",set);
-                editor.commit();
+
+                String uid = addBook(context,book);          //存储
 
                 HashMap map = new HashMap<String,Object>();
+
+                map.put("uid",uid);
                 map.put("add_time",book.getAddTime());                       //添加时间
                 map.put("name",book.getName());                       //添加时间
                 map.put("path",book.getPath());
@@ -214,10 +221,9 @@ public class MainActivity extends AppCompatActivity
                 map.put("total_page",book.getTotalPage());
                 map.put("author",book.getAuthor());
 
-
                 mListData.add(map);
                 Message message = new Message();
-                message.what = 2;
+                message.what = 1;
                 handler.sendMessage(message);
             }
         }
@@ -281,22 +287,5 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    public void createMyDir(){          //pdf统一存储位置
-        String dirPath = "/storage/emulated/0/ReaderAssistant/book";
-        File dir = new File(dirPath);
-        if (dir.exists()) {
-            Log.w(TAG,"The directory [ " + dirPath + " ] has already exists");
-            return ;
-        }
-        if (!dirPath.endsWith(File.separator)) {//不是以 路径分隔符 "/" 结束，则添加路径分隔符 "/"
-            dirPath = dirPath + File.separator;
-        }
-        //创建文件夹
-        if (dir.mkdirs()) {
-            Log.d(TAG,"create directory [ "+ dirPath + " ] success");
-            return;
-        }
-        Log.e(TAG,"create directory [ "+ dirPath + " ] failed");
-        return;
-    }
+
 }
