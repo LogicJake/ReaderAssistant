@@ -1,5 +1,6 @@
 package com.scy.readingassistant;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -32,6 +33,8 @@ import com.baoyz.swipemenulistview.SwipeMenu;
 import com.baoyz.swipemenulistview.SwipeMenuCreator;
 import com.baoyz.swipemenulistview.SwipeMenuItem;
 import com.baoyz.swipemenulistview.SwipeMenuListView;
+import com.tbruyelle.rxpermissions2.Permission;
+import com.tbruyelle.rxpermissions2.RxPermissions;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,13 +48,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 
-import static com.scy.readingassistant.Util.addBook;
-import static com.scy.readingassistant.Util.bakup;
-import static com.scy.readingassistant.Util.createMyDir;
-import static com.scy.readingassistant.Util.deleteBook;
-import static com.scy.readingassistant.Util.getAllBook;
-import static com.scy.readingassistant.Util.rebulid;
+import static com.scy.readingassistant.Util.*;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener ,View.OnClickListener {
@@ -211,6 +210,7 @@ public class MainActivity extends AppCompatActivity
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.fab:
+                MultPermission();
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.setType("*/*");
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -318,11 +318,15 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_gallery) {
 
         } else if (id == R.id.nav_slideshow) {      //导入备份
+            MultPermission();
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
             intent.setType("*/*");
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             startActivityForResult(intent,2);
+            Toast.makeText(context,"导入备份成功",Toast.LENGTH_SHORT).show();
+
         } else if (id == R.id.nav_manage) {         //备份
+            MultPermission();
             String filePath = "/storage/emulated/0/ReaderAssistant/bak.txt";        //备份路径
             File file = new File(filePath);
             try {
@@ -347,11 +351,28 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_send) {
 
         }
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 
-
+    private void MultPermission(){
+        RxPermissions rxPermissions = new RxPermissions(MainActivity.this);
+        rxPermissions.requestEach(
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE)//权限名称，多个权限之间逗号分隔开
+                .subscribe(new io.reactivex.functions.Consumer<Permission>(){
+                    @Override
+                    public void accept(Permission permission){
+                        if(permission.name.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE) && !permission.granted){
+                            Log.e("MainActivity","权限被拒绝");
+                            PremissionDialog.showMissingPermissionDialog(context,getString(R.string.LACK_RECORD_AUDIO));
+                        }
+                        if(permission.name.equals(Manifest.permission.READ_EXTERNAL_STORAGE) && !permission.granted){
+                            Log.e("MainActivity","权限被拒绝");
+                            PremissionDialog.showMissingPermissionDialog(context,getString(R.string.LACK_RECORD_AUDIO));
+                        }
+                    }
+                });
+    }
 }
