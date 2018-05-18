@@ -6,8 +6,23 @@
     <string name="nav_header_subtitle">android.studio@android.com</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
-<string name="LACK_RECORD_AUDIO">需要存储权限完成功能</string>
+    <string name="LACK_RECORD_AUDIO">需要存储权限完成功能</string>
     <string name="title_activity_pdf_viwer">PdfViwerActivity</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
+
+    <string name="version">版本</string>
+    <string name="app_copyright">© 2018 LogicJake</string>
+    <string name="source_code">源代码</string>\
+    <string name="source_code_wishes">star支持我</string>
+    <string name="author">作者</string>
+    <string name="author_name">LogicJake</string>
+    <string name="author_location">NanJing,China</string>
+    <string name="follow_on_github">在GitHub上跟随我</string>
+    <string name="feedback_and_share">分享</string>
+    <string name="share_to_friends">分享给您的朋友</string>
+    <string name="rate_in_market">在应用市场中评分或评论</string>
+    <string name="feedback">反馈</string>
+    <string name="about">关于</string>
+
 </resources>

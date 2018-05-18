@@ -38,6 +38,8 @@
             android:label="本地书籍">
 
         </activity>
+        <activity android:name=".AboutActivity"
+            android:theme="@style/AppTheme.MaterialAboutActivity"/>
     </application>
 
 </manifest>

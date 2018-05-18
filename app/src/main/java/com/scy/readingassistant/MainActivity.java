@@ -382,8 +382,9 @@ public class MainActivity extends AppCompatActivity
                 System.out.println(e);
             }
             Toast.makeText(context,"备份成功",Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.nav_share) {
-
+        } else if (id == R.id.nav_about) {
+            Intent intent = new Intent(MainActivity.this,AboutActivity.class);
+            startActivity(intent);
         } else if (id == R.id.nav_send) {
             String filePath = "/storage/emulated/0/ReaderAssistant/bak.txt";        //备份路径
             File file = new File(filePath);
@@ -395,7 +396,7 @@ public class MainActivity extends AppCompatActivity
                 Intent sendIntent = new Intent();
                 sendIntent.setAction(Intent.ACTION_SEND);
                 sendIntent.addCategory("android.intent.category.DEFAULT");
-                sendIntent.putExtra(Intent.EXTRA_STREAM, uri);//分享文本内容
+                sendIntent.putExtra(Intent.EXTRA_STREAM, uri);
                 sendIntent.setType("application/txt");
                 startActivity(Intent.createChooser(sendIntent, file.getName()));
             }
