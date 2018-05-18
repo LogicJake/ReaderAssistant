@@ -13,7 +13,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
@@ -383,7 +385,20 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {
-
+            String filePath = "/storage/emulated/0/ReaderAssistant/bak.txt";        //备份路径
+            File file = new File(filePath);
+            if (!file.exists()) {
+                Toast.makeText(context,"请先备份",Toast.LENGTH_SHORT).show();
+            }
+            else {
+                Uri uri = Uri.fromFile(file);
+                Intent sendIntent = new Intent();
+                sendIntent.setAction(Intent.ACTION_SEND);
+                sendIntent.addCategory("android.intent.category.DEFAULT");
+                sendIntent.putExtra(Intent.EXTRA_STREAM, uri);//分享文本内容
+                sendIntent.setType("application/txt");
+                startActivity(Intent.createChooser(sendIntent, file.getName()));
+            }
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
