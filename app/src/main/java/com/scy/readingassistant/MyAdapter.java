@@ -4,10 +4,13 @@ import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.HashMap;
 import java.util.List;
+
+import static com.scy.readingassistant.Util.timedate;
 
 public class MyAdapter extends BaseAdapter {
     private Context context;
@@ -41,8 +44,8 @@ public class MyAdapter extends BaseAdapter {
             holder = new ViewHolder();
             holder.name = (TextView) convertView.findViewById(R.id.item_name);
             holder.path = (TextView) convertView.findViewById(R.id.item_path);
-            holder.current_page = (TextView) convertView.findViewById(R.id.item_current_page);
-            holder.total_page = (TextView) convertView.findViewById(R.id.item_total_page);
+            holder.progressBar = (ProgressBar)convertView.findViewById(R.id.progressBar);
+            holder.progress = (TextView) convertView.findViewById(R.id.progress);
             holder.author = (TextView) convertView.findViewById(R.id.item_author);
             holder.add_time = (TextView) convertView.findViewById(R.id.item_add_time);
 
@@ -52,10 +55,11 @@ public class MyAdapter extends BaseAdapter {
         }
         holder.name.setText((String)list.get(position).get("name"));
         holder.path.setText((String)list.get(position).get("path"));
-        holder.current_page.setText(Integer.toString((int)list.get(position).get("current_page")));
-        holder.total_page.setText(Integer.toString((int)list.get(position).get("total_page")));
-        holder.author.setText((String)list.get(position).get("author"));
-        holder.add_time.setText(Long.toString((long)list.get(position).get("add_time")));
+        float num = (float) (int)list.get(position).get("current_page")/(int)list.get(position).get("total_page");
+        holder.progressBar.setProgress((int)(num*100));
+        holder.progress.setText(Integer.toString((int)list.get(position).get("current_page"))+"/"+Integer.toString((int)list.get(position).get("total_page")));
+        holder.author.setText("作者："+(String)list.get(position).get("author"));
+        holder.add_time.setText(timedate(Long.toString((long)list.get(position).get("add_time")).substring(0,10)));
 
         return convertView;
     }
@@ -63,8 +67,9 @@ public class MyAdapter extends BaseAdapter {
     public class ViewHolder {
         private TextView name;
         private TextView path;
-        private TextView current_page;
-        private TextView total_page;
+        private ProgressBar progressBar;
+        private TextView progress;
+
         private TextView author;
         private TextView add_time;
     }
