@@ -13,8 +13,6 @@ import com.danielstone.materialaboutlibrary.items.MaterialAboutItemOnClickAction
 import com.danielstone.materialaboutlibrary.items.MaterialAboutTitleItem;
 import com.danielstone.materialaboutlibrary.model.MaterialAboutCard;
 import com.danielstone.materialaboutlibrary.model.MaterialAboutList;
-import com.scy.readingassistant.BuildConfig;
-import com.scy.readingassistant.R;
 
 public class AboutActivity extends MaterialAboutActivity {
     @Override
