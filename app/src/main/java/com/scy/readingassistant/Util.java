@@ -150,7 +150,6 @@ public class Util {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
     }
 
     public static void updatePath(Context context,String uuid,String path){
@@ -158,7 +157,6 @@ public class Util {
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
         editor.putString("path_"+uuid,path).commit();
-        System.out.println(sharedPreferences.getString("path_"+uuid,"as"));
     }
 
     public static void MultPermission(final Context context){
@@ -188,5 +186,14 @@ public class Util {
         String times = sdr.format(new Date(i * 1000L));
         return times;
 
+    }
+
+    public static void updateNameAndAuthor(Context context,String uuid,String name,String author) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences("bookInfo", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.putString("name"+uuid,name);
+        editor.putString("author_"+uuid,author);
+        editor.commit();
     }
 }
