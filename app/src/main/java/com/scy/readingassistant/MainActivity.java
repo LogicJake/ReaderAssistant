@@ -357,7 +357,7 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_local) {
             Intent intent = new Intent(MainActivity.this,LocalBook.class);
             startActivity(intent);
-        } else if (id == R.id.nav_physical) {
+//        } else if (id == R.id.nav_physical) {
 
         } else if (id == R.id.nav_import) {      //导入备份
             MultPermission(context);

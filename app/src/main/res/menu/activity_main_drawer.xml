@@ -7,11 +7,11 @@
         <item
             android:id="@+id/nav_local"
             android:icon="@drawable/ic_menu_ebook"
-            android:title="本地书籍" />
-        <item
-            android:id="@+id/nav_physical"
-            android:icon="@drawable/ic_menu_book"
-            android:title="纸质书籍" />
+            android:title="所有书籍" />
+        <!--<item-->
+            <!--android:id="@+id/nav_physical"-->
+            <!--android:icon="@drawable/ic_menu_book"-->
+            <!--android:title="纸质书籍" />-->
 
     </group>
 
