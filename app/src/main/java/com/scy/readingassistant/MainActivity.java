@@ -347,12 +347,12 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-        if (id == R.id.local) {
+        if (id == R.id.nav_local) {
             Intent intent = new Intent(MainActivity.this,LocalBook.class);
             startActivity(intent);
-        } else if (id == R.id.nav_gallery) {
+        } else if (id == R.id.nav_physical) {
 
-        } else if (id == R.id.nav_slideshow) {      //导入备份
+        } else if (id == R.id.nav_import) {      //导入备份
             MultPermission(context);
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
             intent.setType("*/*");
@@ -360,7 +360,7 @@ public class MainActivity extends AppCompatActivity
             startActivityForResult(intent,2);
 
 
-        } else if (id == R.id.nav_manage) {         //备份
+        } else if (id == R.id.nav_backup) {         //备份
             MultPermission(context);
             String filePath = "/storage/emulated/0/ReaderAssistant/bak.txt";        //备份路径
             File file = new File(filePath);
