@@ -13,10 +13,12 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -28,12 +30,13 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
+import static com.scy.readingassistant.BookTask.addBook;
+import static com.scy.readingassistant.BookTask.deleteBook;
+import static com.scy.readingassistant.BookTask.getAllBook;
+import static com.scy.readingassistant.BookTask.rebulid;
+import static com.scy.readingassistant.BookTask.updateNameAndAuthor;
 import static com.scy.readingassistant.Util.MultPermission;
-import static com.scy.readingassistant.Util.addBook;
-import static com.scy.readingassistant.Util.deleteBook;
-import static com.scy.readingassistant.Util.getAllBook;
-import static com.scy.readingassistant.Util.rebulid;
-import static com.scy.readingassistant.Util.updatePath;
+
 
 public class LocalBook extends AppCompatActivity implements View.OnClickListener{
     private Context context = this;
@@ -160,14 +163,34 @@ public class LocalBook extends AppCompatActivity implements View.OnClickListener
     public boolean onContextItemSelected(MenuItem item) {
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item
                 .getMenuInfo();
-        int i = (int) info.id;// 这里的info.id对应的就是数据库中_id的值
+        int i = (int) info.id;
         switch (item.getItemId()) {
             case 1:
                 deleteBook(context, (String) mListData.get(i).get("uid"));
-                mListData.remove(i);
-                Message message = new Message();
-                message.what = 1;
-                handler.sendMessage(message);
+                getBookInfo();
+                break;
+            case 0:
+                LayoutInflater inflater = getLayoutInflater();
+                final View layout = inflater.inflate(R.layout.dialog_update,(ViewGroup) findViewById(R.id.dialog));
+                android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(context);
+                final EditText editText_name = (EditText) layout.findViewById(R.id.name);
+                final EditText editText_author = (EditText) layout.findViewById(R.id.author);
+                editText_name.setText((String) mListData.get(i).get("name"));
+                editText_author.setText((String) mListData.get(i).get("author"));
+                final String uuid = (String) mListData.get(i).get("uid");
+                builder.setTitle("修改书籍信息")
+                        .setView(layout)
+                        .setNegativeButton("取消", null)
+                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                String name = editText_name.getText().toString();
+                                String author = editText_author.getText().toString();
+                                updateNameAndAuthor(context,uuid,name,author);
+                                getBookInfo();
+                            }
+                        })
+                        .show();;
                 break;
         }
         return super.onContextItemSelected(item);
@@ -244,6 +267,9 @@ public class LocalBook extends AppCompatActivity implements View.OnClickListener
                 getBookInfo();
             }
         }
+    }
+
+    private void updatePath(Context context, String uid, String path) {
     }
 
     public void setListViewHeightBasedOnChildren(ListView listView) {

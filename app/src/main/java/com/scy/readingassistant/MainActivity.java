@@ -25,7 +25,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -38,15 +37,16 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
+import static com.scy.readingassistant.BookTask.addBook;
+import static com.scy.readingassistant.BookTask.backup;
+import static com.scy.readingassistant.BookTask.deleteBook;
+import static com.scy.readingassistant.BookTask.getAllBook;
+import static com.scy.readingassistant.BookTask.rebulid;
+import static com.scy.readingassistant.BookTask.updateNameAndAuthor;
+import static com.scy.readingassistant.BookTask.updatePath;
 import static com.scy.readingassistant.Util.MultPermission;
-import static com.scy.readingassistant.Util.addBook;
-import static com.scy.readingassistant.Util.backup;
 import static com.scy.readingassistant.Util.createMyDir;
-import static com.scy.readingassistant.Util.deleteBook;
-import static com.scy.readingassistant.Util.getAllBook;
-import static com.scy.readingassistant.Util.rebulid;
-import static com.scy.readingassistant.Util.updateNameAndAuthor;
-import static com.scy.readingassistant.Util.updatePath;
+
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener ,View.OnClickListener {
@@ -145,12 +145,7 @@ public class MainActivity extends AppCompatActivity
                     AlertDialog.Builder builder = new AlertDialog.Builder(context);
                     builder.setTitle("文件不存在");
                     builder.setMessage("文件不存在，按导入按钮重新选择文件位置");
-                    builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-
-                        }
-                    });
+                    builder.setNegativeButton("取消",null);
                     builder.setPositiveButton("导入", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -182,10 +177,7 @@ public class MainActivity extends AppCompatActivity
         switch (item.getItemId()) {
             case 1:
                 deleteBook(context, (String) mListData.get(i).get("uid"));
-                mListData.remove(i);
-                Message message = new Message();
-                message.what = 1;
-                handler.sendMessage(message);
+                getBookInfo();
                 break;
             case 0:
                 LayoutInflater inflater = getLayoutInflater();

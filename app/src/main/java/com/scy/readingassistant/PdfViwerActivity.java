@@ -21,7 +21,7 @@ import com.github.barteksc.pdfviewer.listener.OnPageScrollListener;
 
 import java.io.File;
 
-import static com.scy.readingassistant.Util.updatePage;
+import static com.scy.readingassistant.BookTask.updatePage;
 
 
 public class PdfViwerActivity extends AppCompatActivity implements View.OnClickListener {
