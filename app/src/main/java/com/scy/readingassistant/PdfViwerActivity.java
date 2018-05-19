@@ -150,8 +150,6 @@ public class PdfViwerActivity extends AppCompatActivity implements View.OnClickL
     }
 
     public void onPause() {
-        System.out.println(current_page.getText().toString());
-        System.out.println(total_page.getText().toString());
         updatePage(context,uid,Integer.parseInt(current_page.getText().toString()),Integer.parseInt(total_page.getText().toString()));
         super.onPause();
     }

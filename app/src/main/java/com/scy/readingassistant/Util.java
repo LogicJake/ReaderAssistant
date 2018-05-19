@@ -113,6 +113,7 @@ public class Util {
 
         editor.putInt("current_page_"+uuid,currentpage);
         editor.putInt("total_page_"+uuid,totalpage);
+        editor.putLong("add_time_"+uuid,System.currentTimeMillis());
         editor.commit();
     }
 
