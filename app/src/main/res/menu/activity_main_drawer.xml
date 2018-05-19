@@ -6,11 +6,11 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_local"
-            android:icon="@drawable/ic_menu_camera"
+            android:icon="@drawable/ic_menu_ebook"
             android:title="本地书籍" />
         <item
             android:id="@+id/nav_physical"
-            android:icon="@drawable/ic_menu_gallery"
+            android:icon="@drawable/ic_menu_book"
             android:title="纸质书籍" />
 
     </group>
@@ -19,12 +19,12 @@
         <menu>
             <item
                 android:id="@+id/nav_backup"
-                android:icon="@drawable/ic_menu_manage"
+                android:icon="@drawable/ic_menu_backup"
                 android:title="备份" />
 
             <item
                 android:id="@+id/nav_import"
-                android:icon="@drawable/ic_menu_slideshow"
+                android:icon="@drawable/ic_menu_import"
                 android:title="导入备份文件" />
 
             <item
