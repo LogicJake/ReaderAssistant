@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.v4.content.FileProvider;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -44,6 +45,7 @@ import static com.scy.readingassistant.BookTask.getAllBook;
 import static com.scy.readingassistant.BookTask.rebulid;
 import static com.scy.readingassistant.BookTask.updateNameAndAuthor;
 import static com.scy.readingassistant.BookTask.updatePath;
+import static com.scy.readingassistant.FileUtils.getFilePathByUri;
 import static com.scy.readingassistant.Util.MultPermission;
 import static com.scy.readingassistant.Util.createMyDir;
 
@@ -206,7 +208,6 @@ public class MainActivity extends AppCompatActivity
         return super.onContextItemSelected(item);
     }
 
-
     public void onRestart(){
         Log.e(TAG,"onRestart");
         getBookInfo();
@@ -261,12 +262,16 @@ public class MainActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK) {
             Uri uri = data.getData();
-            String path = uri.getPath().toString();
+            String path = getFilePathByUri(this, uri);
+            if(path == null || !new File(path).exists())
+            {
+                Log.e(TAG,path);
+                Toast.makeText(this,"获取文件路径失败，请用系统文件管理器打开！",Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Log.e(TAG,path);
             String[] aa = path.split("/");
-            path = "/storage/emulated/0"+path.substring(path.indexOf("/",1));
-
             if (requestCode == 1) {
-
                 aa = aa[aa.length-1].split("\\.");
                 String name = aa[0];
                 if(!aa[aa.length-1].equals("pdf")){
@@ -365,8 +370,6 @@ public class MainActivity extends AppCompatActivity
             intent.setType("*/*");
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             startActivityForResult(intent,2);
-
-
         } else if (id == R.id.nav_backup) {         //备份
             MultPermission(context);
             String filePath = "/storage/emulated/0/ReaderAssistant/bak.txt";        //备份路径
@@ -398,12 +401,13 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(context,"请先备份",Toast.LENGTH_SHORT).show();
             }
             else {
-                Uri uri = Uri.fromFile(file);
-                Intent sendIntent = new Intent();
-                sendIntent.setAction(Intent.ACTION_SEND);
-                sendIntent.addCategory("android.intent.category.DEFAULT");
-                sendIntent.putExtra(Intent.EXTRA_STREAM, uri);
+                Uri uri = FileProvider.getUriForFile(
+                        this,
+                        "com.scy.readingassistant.fileprovider",
+                        file);
+                Intent sendIntent = new Intent(Intent.ACTION_SEND);
                 sendIntent.setType("application/txt");
+                sendIntent.putExtra(Intent.EXTRA_STREAM, uri);
                 startActivity(Intent.createChooser(sendIntent, file.getName()));
             }
         }

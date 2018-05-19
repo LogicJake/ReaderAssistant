@@ -35,6 +35,7 @@ import static com.scy.readingassistant.BookTask.deleteBook;
 import static com.scy.readingassistant.BookTask.getAllBook;
 import static com.scy.readingassistant.BookTask.rebulid;
 import static com.scy.readingassistant.BookTask.updateNameAndAuthor;
+import static com.scy.readingassistant.FileUtils.getFilePathByUri;
 import static com.scy.readingassistant.Util.MultPermission;
 
 
@@ -213,12 +214,16 @@ public class LocalBook extends AppCompatActivity implements View.OnClickListener
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK) {
             Uri uri = data.getData();
-            String path = uri.getPath().toString();
+            String path = getFilePathByUri(this, uri);
+            if(path == null || !new File(path).exists())
+            {
+                Log.e(TAG,path);
+                Toast.makeText(this,"获取文件路径失败，请用系统文件管理器打开！",Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Log.e(TAG,path);
             String[] aa = path.split("/");
-            path = "/storage/emulated/0"+path.substring(path.indexOf("/",1));
-
             if (requestCode == 1) {
-
                 aa = aa[aa.length-1].split("\\.");
                 String name = aa[0];
                 if(!aa[aa.length-1].equals("pdf")){

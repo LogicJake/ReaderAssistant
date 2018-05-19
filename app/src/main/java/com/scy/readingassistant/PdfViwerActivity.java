@@ -36,7 +36,9 @@ public class PdfViwerActivity extends AppCompatActivity implements View.OnClickL
 
     private PDFView pdfView;
     private TextView total_page;
-    private EditText current_page;
+    private TextView current_page;
+    private EditText jump_page;
+
     private final Runnable mHidePart2Runnable = new Runnable() {
         @SuppressLint("InlinedApi")
         @Override
@@ -99,10 +101,12 @@ public class PdfViwerActivity extends AppCompatActivity implements View.OnClickL
         mControlsView = findViewById(R.id.fullscreen_content_controls);
         pdfView = findViewById(R.id.pdfView);
 
-        current_page = (EditText) findViewById(R.id.current_page);
+        current_page = (TextView) findViewById(R.id.current_page);
         total_page = (TextView) findViewById(R.id.total_page);
         jump = (ImageButton)findViewById(R.id.jump);
         jump.setOnClickListener(this);
+        jump_page = (EditText) findViewById(R.id.jump_page);
+
         initPdf();
     }
 
@@ -209,8 +213,10 @@ public class PdfViwerActivity extends AppCompatActivity implements View.OnClickL
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.jump:
-                System.out.println(Integer.parseInt(current_page.getText().toString())-1);
-                pdfView.jumpTo(Integer.parseInt(current_page.getText().toString())-1);
+                if(jump_page.getText().toString().length() == 0 )
+                    return;
+                int page = Integer.parseInt(jump_page.getText().toString())-1;
+                pdfView.jumpTo(page);
                 break;
             default:
                 break;

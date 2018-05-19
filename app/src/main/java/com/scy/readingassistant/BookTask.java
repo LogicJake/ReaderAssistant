@@ -25,7 +25,8 @@ public class BookTask {
         SharedPreferences sharedPreferences = context.getSharedPreferences("bookInfo", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
-        editor.putString("name"+uuid,name);
+        System.out.println(name);
+        editor.putString("name_"+uuid,name);
         editor.putString("author_"+uuid,author);
         editor.commit();
     }
