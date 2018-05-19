@@ -18,6 +18,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -61,7 +62,7 @@ public class MainActivity extends AppCompatActivity
     private static final String TAG = "MainActivity";
     private List<HashMap<String, Object>> mListData;
     List<HashMap<String, Object>> recentList;
-    private SwipeMenuListView booklist;
+    private ListView booklist;
     private MyAdapter myAdapter;
     private String uid;
 
@@ -90,13 +91,13 @@ public class MainActivity extends AppCompatActivity
             super.handleMessage(msg);
             switch (msg.what) {
                 case 1:
-                    Collections.sort(mListData,new Order());
+                    Collections.sort(mListData, new Order());
                     System.out.println(mListData);
-                    if (mListData.size()>5)
-                        recentList = mListData.subList(0,5);
+                    if (mListData.size() > 5)
+                        recentList = mListData.subList(0, 5);
                     else
                         recentList = mListData;
-                    myAdapter = new MyAdapter(context,recentList);
+                    myAdapter = new MyAdapter(context, recentList);
                     booklist.setAdapter(myAdapter);
                     setListViewHeightBasedOnChildren(booklist);
                     break;
@@ -104,6 +105,7 @@ public class MainActivity extends AppCompatActivity
             }
         }
     };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -131,34 +133,14 @@ public class MainActivity extends AppCompatActivity
         createMyDir();
     }
 
-    public void initListView(){
-        booklist = (SwipeMenuListView) findViewById(R.id.list_view);
+    public void initListView() {
+        booklist = (ListView) findViewById(R.id.list_view);
 
-        SwipeMenuCreator creater = new SwipeMenuCreator() {
+        booklist.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
             @Override
-            public void create(SwipeMenu menu) {
-                SwipeMenuItem deleteItem = new SwipeMenuItem(context);
-                deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9, 0x3F, 0x25)));
-                deleteItem.setWidth(200);
-                deleteItem.setIcon(R.drawable.ic_delete);
-                menu.addMenuItem(deleteItem);
-            }
-        };
-        // set creator
-        booklist.setMenuCreator(creater);
-
-        booklist.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
-                switch (index) {
-                    case 0:
-                        deleteBook(context,(String)mListData.get(position).get("uid"));
-                        mListData.remove(position);
-                        Message message = new Message();
-                        message.what = 1;
-                        handler.sendMessage(message);
-                }
-                return false;
+            public void onCreateContextMenu(ContextMenu contextMenu, View view, ContextMenu.ContextMenuInfo contextMenuInfo) {
+                contextMenu.add(0, 0, 0, "修改");
+                contextMenu.add(0, 1, 0, "删除");
             }
         });
 
@@ -166,8 +148,8 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 File file = new File((String) mListData.get(i).get("path"));
-                if(!file.exists()){
-                    uid = (String)mListData.get(i).get("uid");
+                if (!file.exists()) {
+                    uid = (String) mListData.get(i).get("uid");
                     AlertDialog.Builder builder = new AlertDialog.Builder(context);
                     builder.setTitle("文件不存在");
                     builder.setMessage("文件不存在，按导入按钮重新选择文件位置");
@@ -184,7 +166,7 @@ public class MainActivity extends AppCompatActivity
                             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                             intent.setType("*/*");
                             intent.addCategory(Intent.CATEGORY_OPENABLE);
-                            startActivityForResult(intent,3);
+                            startActivityForResult(intent, 3);
                         }
                     });
                     AlertDialog dialog = builder.create();
@@ -194,12 +176,29 @@ public class MainActivity extends AppCompatActivity
                 Intent intent = new Intent(MainActivity.this, PdfViwerActivity.class);
                 intent.putExtra("name", (String) mListData.get(i).get("name"));
                 intent.putExtra("path", (String) mListData.get(i).get("path"));
-                intent.putExtra("current_page",(int)mListData.get(i).get("current_page"));
-                intent.putExtra("uid",(String)mListData.get(i).get("uid"));
+                intent.putExtra("current_page", (int) mListData.get(i).get("current_page"));
+                intent.putExtra("uid", (String) mListData.get(i).get("uid"));
                 startActivity(intent);
             }
         });
     }
+
+    public boolean onContextItemSelected(MenuItem item) {
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item
+                .getMenuInfo();
+        int i = (int) info.id;// 这里的info.id对应的就是数据库中_id的值
+        switch (item.getItemId()) {
+            case 1:
+                deleteBook(context, (String) mListData.get(i).get("uid"));
+                mListData.remove(i);
+                Message message = new Message();
+                message.what = 1;
+                handler.sendMessage(message);
+                break;
+        }
+        return super.onContextItemSelected(item);
+    }
+
 
     public void onRestart(){
         Log.e(TAG,"onRestart");

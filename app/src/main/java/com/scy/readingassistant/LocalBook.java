@@ -14,6 +14,8 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -44,7 +46,7 @@ public class LocalBook extends AppCompatActivity implements View.OnClickListener
     private Context context = this;
     private static final String TAG = "LocalBook";
     private List<HashMap<String, Object>> mListData;
-    private SwipeMenuListView booklist;
+    private ListView booklist;
     private MyAdapter myAdapter;
     private String uid;
 
@@ -112,35 +114,16 @@ public class LocalBook extends AppCompatActivity implements View.OnClickListener
     }
 
     public void initListView(){
-        booklist = (SwipeMenuListView) findViewById(R.id.list_view);
+        booklist = (ListView) findViewById(R.id.list_view);
 
-        SwipeMenuCreator creater = new SwipeMenuCreator() {
+        booklist.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
             @Override
-            public void create(SwipeMenu menu) {
-                SwipeMenuItem deleteItem = new SwipeMenuItem(context);
-                deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9, 0x3F, 0x25)));
-                deleteItem.setWidth(200);
-                deleteItem.setIcon(R.drawable.ic_delete);
-                menu.addMenuItem(deleteItem);
-            }
-        };
-        // set creator
-        booklist.setMenuCreator(creater);
-
-        booklist.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
-                switch (index) {
-                    case 0:
-                        deleteBook(context,(String)mListData.get(position).get("uid"));
-                        mListData.remove(position);
-                        Message message = new Message();
-                        message.what = 1;
-                        handler.sendMessage(message);
-                }
-                return false;
+            public void onCreateContextMenu(ContextMenu contextMenu, View view, ContextMenu.ContextMenuInfo contextMenuInfo) {
+                contextMenu.add(0, 0, 0, "修改");
+                contextMenu.add(0, 1, 0, "删除");
             }
         });
+
 
         booklist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -179,6 +162,22 @@ public class LocalBook extends AppCompatActivity implements View.OnClickListener
                 startActivity(intent);
             }
         });
+    }
+
+    public boolean onContextItemSelected(MenuItem item) {
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item
+                .getMenuInfo();
+        int i = (int) info.id;// 这里的info.id对应的就是数据库中_id的值
+        switch (item.getItemId()) {
+            case 1:
+                deleteBook(context, (String) mListData.get(i).get("uid"));
+                mListData.remove(i);
+                Message message = new Message();
+                message.what = 1;
+                handler.sendMessage(message);
+                break;
+        }
+        return super.onContextItemSelected(item);
     }
 
     public void getBookInfo(){

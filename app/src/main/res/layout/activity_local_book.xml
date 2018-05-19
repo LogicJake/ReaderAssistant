@@ -11,11 +11,12 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent" >
-            <com.baoyz.swipemenulistview.SwipeMenuListView
+            <ListView
                 android:id="@+id/list_view"
+                android:divider="@android:color/transparent"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-            </com.baoyz.swipemenulistview.SwipeMenuListView>
+            </ListView>
         </LinearLayout>
     </ScrollView>
     <android.support.design.widget.FloatingActionButton
