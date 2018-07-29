@@ -23,9 +23,9 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.scy.readingassistant.domain.BookInfo;
-import com.scy.readingassistant.adapter.MyAdapter;
 import com.scy.readingassistant.R;
+import com.scy.readingassistant.adapter.MyAdapter;
+import com.scy.readingassistant.domain.BookInfo;
 
 import java.io.File;
 import java.io.FileInputStream;

@@ -12,6 +12,7 @@
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
     <TextView
+        android:id="@+id/updateTime"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="上次备份时间：2018/2/2 12:12:12"

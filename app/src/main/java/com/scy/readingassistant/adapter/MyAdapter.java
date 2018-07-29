@@ -61,7 +61,7 @@ public class MyAdapter extends BaseAdapter {
         holder.progressBar.setProgress((int)(num*100));
         holder.progress.setText(Integer.toString((int)list.get(position).get("current_page"))+"/"+Integer.toString((int)list.get(position).get("total_page")));
         holder.author.setText("作者："+(String)list.get(position).get("author"));
-        holder.add_time.setText(timedate(Long.toString((long)list.get(position).get("add_time")).substring(0,10)));
+        holder.add_time.setText(timedate((Long) list.get(position).get("add_time")));
 
         return convertView;
     }

@@ -5,8 +5,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 
-import com.scy.readingassistant.view.PremissionDialog;
 import com.scy.readingassistant.R;
+import com.scy.readingassistant.view.PremissionDialog;
 import com.tbruyelle.rxpermissions2.Permission;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 
@@ -65,11 +65,10 @@ public class Util {
                 });
     }
 
-    public static String timedate(String time) {
+    public static String timedate(Long time) {
         SimpleDateFormat sdr = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         @SuppressWarnings("unused")
-        int i = Integer.parseInt(time);
-        String times = sdr.format(new Date(i * 1000L));
+        String times = sdr.format(new Date(time));
         return times;
 
     }

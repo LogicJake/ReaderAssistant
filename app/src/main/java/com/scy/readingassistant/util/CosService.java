@@ -2,9 +2,7 @@ package com.scy.readingassistant.util;
 
 import android.content.Context;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.scy.readingassistant.util.LocalCredentialProvider;
 import com.tencent.cos.xml.CosXmlService;
 import com.tencent.cos.xml.CosXmlServiceConfig;
 import com.tencent.cos.xml.exception.CosXmlClientException;

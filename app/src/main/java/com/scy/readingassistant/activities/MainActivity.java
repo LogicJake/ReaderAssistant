@@ -29,11 +29,12 @@ import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import com.scy.readingassistant.domain.BookInfo;
-import com.scy.readingassistant.adapter.MyAdapter;
 import com.scy.readingassistant.R;
+import com.scy.readingassistant.adapter.MyAdapter;
+import com.scy.readingassistant.domain.BookInfo;
 import com.scy.readingassistant.util.CosService;
 import com.tencent.connect.common.Constants;
 import com.tencent.tauth.IUiListener;
@@ -61,6 +62,7 @@ import static com.scy.readingassistant.util.BookTask.updatePath;
 import static com.scy.readingassistant.util.FileUtils.getFilePathByUri;
 import static com.scy.readingassistant.util.Util.MultPermission;
 import static com.scy.readingassistant.util.Util.createMyDir;
+import static com.scy.readingassistant.util.Util.timedate;
 
 
 public class MainActivity extends AppCompatActivity
@@ -74,6 +76,9 @@ public class MainActivity extends AppCompatActivity
     private Tencent mTencent;
     private String uid;
     private NavigationView navigationView;
+    private TextView updateTime;
+    private SharedPreferences sp;
+    private SharedPreferences.Editor editor;
 
     public class Order implements Comparator<HashMap<String, Object>> {
 
@@ -92,7 +97,6 @@ public class MainActivity extends AppCompatActivity
                 return -1;
             }
         }
-
     }
 
     private Handler handler = new Handler() {
@@ -110,7 +114,6 @@ public class MainActivity extends AppCompatActivity
                     booklist.setAdapter(myAdapter);
                     setListViewHeightBasedOnChildren(booklist);
                     break;
-
             }
         }
     };
@@ -119,6 +122,12 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        createMyDir();
+        initListView();     //设置书本listview
+        getBookInfo();
+    }
+
+    public void initListView() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -133,15 +142,17 @@ public class MainActivity extends AppCompatActivity
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
+        sp = getSharedPreferences("setting",MODE_PRIVATE);
+        editor = sp.edit();
+
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        createMyDir();
-        initListView();     //设置书本listview
-        getBookInfo();
-    }
+        View headerView = navigationView.getHeaderView(0);
+        updateTime = headerView.findViewById(R.id.updateTime);
+        updateTime.setText("上次备份时间："+sp.getString("lastUpdateTime","未备份"));
+        Log.d(TAG, "initListView: "+updateTime);
 
-    public void initListView() {
         booklist = (ListView) findViewById(R.id.list_view);
 
         booklist.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
@@ -406,29 +417,7 @@ public class MainActivity extends AppCompatActivity
 //            intent.addCategory(Intent.CATEGORY_OPENABLE);
 //            startActivityForResult(intent,2);
         } else if (id == R.id.nav_backup) {         //备份
-            MultPermission(context);
-            String filePath = "/storage/emulated/0/ReaderAssistant/bak.txt";        //备份路径
-            File file = new File(filePath);
-            try {
-                if (file.exists()) {
-                    Log.w(TAG,"The directory [ " + filePath + " ] has already exists");
-                }
-                else
-                    file.createNewFile();
-                String data = backup(context);
-                byte[] buffer = data.getBytes();
-                FileOutputStream fos = new FileOutputStream(file);
-                fos.write(buffer, 0, buffer.length);
-                fos.flush();
-                fos.close();
-            }catch (Exception e) {
-                Log.e(TAG, "onNavigationItemSelected: ", e);
-            }
-            SharedPreferences sharedPreferences = context.getSharedPreferences("uid", Context.MODE_PRIVATE);
-            String uid = sharedPreferences.getString("uid",null);
-            if (uid != null)
-                new CosService(context).upload(filePath,uid);
-            Toast.makeText(context,"备份成功",Toast.LENGTH_SHORT).show();
+            backupFunction();
         } else if (id == R.id.nav_about) {
             Intent intent = new Intent(MainActivity.this,AboutActivity.class);
             startActivity(intent);
@@ -455,6 +444,35 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void backupFunction(){
+        MultPermission(context);
+        String filePath = "/storage/emulated/0/ReaderAssistant/bak.txt";        //备份路径
+        File file = new File(filePath);
+        try {
+            if (file.exists()) {
+                Log.w(TAG,"The directory [ " + filePath + " ] has already exists");
+            }
+            else
+                file.createNewFile();
+            String data = backup(context);
+            byte[] buffer = data.getBytes();
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write(buffer, 0, buffer.length);
+            fos.flush();
+            fos.close();
+        }catch (Exception e) {
+            Log.e(TAG, "onNavigationItemSelected: ", e);
+        }
+        SharedPreferences sharedPreferences = context.getSharedPreferences("uid", Context.MODE_PRIVATE);
+        String uid = sharedPreferences.getString("uid",null);
+        if (uid != null)
+            new CosService(context).upload(filePath,uid);
+        Toast.makeText(context,"备份成功",Toast.LENGTH_SHORT).show();
+        String updateTimeString = timedate(System.currentTimeMillis());
+        updateTime.setText("上次备份时间："+updateTimeString);
+        editor.putString("lastUpdateTime",updateTimeString).commit();
     }
 
     private class BaseUiListener implements IUiListener {
