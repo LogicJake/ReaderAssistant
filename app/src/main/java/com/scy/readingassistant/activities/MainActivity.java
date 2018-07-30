@@ -164,6 +164,11 @@ public class MainActivity extends AppCompatActivity
         updateTime.setText("上次同步时间：\n"+sp.getString("lastUpdateTime","未备份"));
         Log.d(TAG, "initListView: "+updateTime);
 
+        if (sp.getString("uid",null) != null){
+            navigationView.getMenu().findItem(R.id.nav_login).setVisible(false);
+            navigationView.getMenu().findItem(R.id.nav_logout).setVisible(true);
+        }
+
         booklist = (ListView) findViewById(R.id.list_view);
 
         booklist.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
@@ -391,6 +396,10 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void synch(){
+        if (sp.getString("uid",null) == null){
+            Toast.makeText(context,"请先登陆",Toast.LENGTH_SHORT).show();
+            return;
+        }
         //拉取远程
 //            String filePath = "/storage/emulated/0/ReaderAssistant/";        //备份路径
 //            SharedPreferences sharedPreferences = context.getSharedPreferences("uid", Context.MODE_PRIVATE);
@@ -474,10 +483,11 @@ public class MainActivity extends AppCompatActivity
             fos.write(buffer, 0, buffer.length);
             fos.flush();
             fos.close();
+            Toast.makeText(context, "备份成功", Toast.LENGTH_SHORT).show();
         }catch (Exception e) {
             Log.e(TAG, "onNavigationItemSelected: ", e);
+            Toast.makeText(context, "备份失败", Toast.LENGTH_SHORT).show();
         }
-
     }
 
     private class BaseUiListener implements IUiListener {
@@ -485,8 +495,6 @@ public class MainActivity extends AppCompatActivity
             Log.v("----TAG--", "-------------"+response.toString());
             try {
                 String openid = ((JSONObject)response).getString("openid");
-                SharedPreferences sharedPreferences = context.getSharedPreferences("uid", Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString("uid","qq"+openid);
                 editor.commit();
                 navigationView.getMenu().findItem(R.id.nav_login).setVisible(false);
