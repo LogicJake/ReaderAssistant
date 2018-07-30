@@ -413,6 +413,10 @@ public class MainActivity extends AppCompatActivity
         }else if (id == R.id.nav_login){
             mTencent = Tencent.createInstance("1106974967",getApplicationContext());
             mTencent.login(MainActivity.this,"all",new BaseUiListener());
+        }else if (id == R.id.nav_logout){
+            editor.remove("uid").commit();
+            navigationView.getMenu().findItem(R.id.nav_login).setVisible(true);
+            navigationView.getMenu().findItem(R.id.nav_logout).setVisible(false);
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
