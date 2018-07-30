@@ -74,12 +74,14 @@ public class CosService {
             @Override
             public void onSuccess(CosXmlRequest cosXmlRequest, CosXmlResult cosXmlResult) {
                 Log.w("TEST","success");
+                requestNetwork.success();
             }
 
             @Override
             public void onFail(CosXmlRequest cosXmlRequest, CosXmlClientException clientException, CosXmlServiceException serviceException)  {
                 String errorMsg = clientException != null ? clientException.toString() : serviceException.toString();
                 Log.w("TEST",errorMsg);
+                requestNetwork.fail(errorMsg);
             }
         });
     }

@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -35,9 +34,8 @@ import android.widget.Toast;
 
 import com.scy.readingassistant.R;
 import com.scy.readingassistant.adapter.MyAdapter;
+import com.scy.readingassistant.asyncTask.synchTask;
 import com.scy.readingassistant.domain.BookInfo;
-import com.scy.readingassistant.myInterface.RequestNetwork;
-import com.scy.readingassistant.util.CosService;
 import com.tencent.connect.common.Constants;
 import com.tencent.tauth.IUiListener;
 import com.tencent.tauth.Tencent;
@@ -53,6 +51,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import static com.scy.readingassistant.util.BookTask.addBook;
 import static com.scy.readingassistant.util.BookTask.backup;
@@ -400,53 +399,7 @@ public class MainActivity extends AppCompatActivity
             Toast.makeText(context,"请先登陆",Toast.LENGTH_SHORT).show();
             return;
         }
-        //拉取远程
-//            String filePath = "/storage/emulated/0/ReaderAssistant/";        //备份路径
-//            SharedPreferences sharedPreferences = context.getSharedPreferences("uid", Context.MODE_PRIVATE);
-//            String uid = sharedPreferences.getString("uid",null);
-//            if (uid != null)
-//                new CosService(context).download(filePath,uid);
-//            try {
-//                File file = new File(filePath+uid);
-//                FileInputStream inputStream = new FileInputStream(file);
-//                byte temp[] = new byte[1024];
-//                StringBuilder sb = new StringBuilder("");
-//                int len = 0;
-//                while ((len = inputStream.read(temp)) > 0) {
-//                    sb.append(new String(temp, 0, len));
-//                }
-//                Log.d("msg", "readSaveFile: \n" + sb.toString());
-//                rebulid(context, sb.toString());
-//                inputStream.close();
-//
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-        //获取本地
-        //        SharedPreferences sharedPreferences = context.getSharedPreferences("uid", Context.MODE_PRIVATE);
-//        String uid = sharedPreferences.getString("uid",null);
-//        CosService cosService = null;
-//        if (uid != null){
-//            cosService =  new CosService(context);
-//            cosService.upload(filePath,uid);
-//        }
-//        if (cosService!=null) {
-//            cosService.setRequestNetwork(new RequestNetwork() {
-//                @Override
-//                public void success() {
-//                    Message message = new Message();
-//                    message.what = 2;
-//                    handler.sendMessage(message);
-//                }
-//
-//                @Override
-//                public void fail(String errmsg) {
-//                    Message message = new Message();
-//                    message.what = 3;
-//                    handler.sendMessage(message);
-//                }
-//            });
-//        }
+        new synchTask(context).executeOnExecutor(Executors.newCachedThreadPool());
     }
 
     private void send(){
