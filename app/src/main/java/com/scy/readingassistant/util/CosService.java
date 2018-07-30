@@ -3,6 +3,7 @@ package com.scy.readingassistant.util;
 import android.content.Context;
 import android.util.Log;
 
+import com.scy.readingassistant.myInterface.RequestNetwork;
 import com.tencent.cos.xml.CosXmlService;
 import com.tencent.cos.xml.CosXmlServiceConfig;
 import com.tencent.cos.xml.exception.CosXmlClientException;
@@ -21,6 +22,12 @@ public class CosService {
     String secretKey ="5wXt1xd3ECvNZVAYp5f094lCPN6lCPN6";
     long keyDuration = 600;                         //SecretKey 的有效时间，单位秒
     CosXmlService cosXmlService;
+
+    public void setRequestNetwork(RequestNetwork requestNetwork) {
+        this.requestNetwork = requestNetwork;
+    }
+
+    private RequestNetwork requestNetwork;
 
     public CosService(Context context){
         CosXmlServiceConfig serviceConfig = new CosXmlServiceConfig.Builder()
@@ -44,12 +51,14 @@ public class CosService {
             @Override
             public void onSuccess(CosXmlRequest request, CosXmlResult result) {
                 Log.w("TEST","success =" + result.accessUrl);
+                requestNetwork.success();
             }
 
             @Override
             public void onFail(CosXmlRequest cosXmlRequest, CosXmlClientException clientException, CosXmlServiceException serviceException)  {
                 String errorMsg = clientException != null ? clientException.toString() : serviceException.toString();
                 Log.w("TEST",errorMsg);
+                requestNetwork.fail(errorMsg);
             }
         });
     }

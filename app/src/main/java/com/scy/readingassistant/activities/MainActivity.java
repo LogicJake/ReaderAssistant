@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -35,6 +36,7 @@ import android.widget.Toast;
 import com.scy.readingassistant.R;
 import com.scy.readingassistant.adapter.MyAdapter;
 import com.scy.readingassistant.domain.BookInfo;
+import com.scy.readingassistant.myInterface.RequestNetwork;
 import com.scy.readingassistant.util.CosService;
 import com.tencent.connect.common.Constants;
 import com.tencent.tauth.IUiListener;
@@ -114,6 +116,15 @@ public class MainActivity extends AppCompatActivity
                     booklist.setAdapter(myAdapter);
                     setListViewHeightBasedOnChildren(booklist);
                     break;
+                case 2:
+                    Toast.makeText(context, "备份成功", Toast.LENGTH_SHORT).show();
+                    String updateTimeString = timedate(System.currentTimeMillis());
+                    updateTime.setText("上次备份时间：\n" + updateTimeString);
+                    editor.putString("lastUpdateTime", updateTimeString).commit();
+                    break;
+                case 3:
+                    Toast.makeText(context, "备份失败", Toast.LENGTH_SHORT).show();
+                    break;
             }
         }
     };
@@ -150,7 +161,7 @@ public class MainActivity extends AppCompatActivity
 
         View headerView = navigationView.getHeaderView(0);
         updateTime = headerView.findViewById(R.id.updateTime);
-        updateTime.setText("上次备份时间："+sp.getString("lastUpdateTime","未备份"));
+        updateTime.setText("上次备份时间：\n"+sp.getString("lastUpdateTime","未备份"));
         Log.d(TAG, "initListView: "+updateTime);
 
         booklist = (ListView) findViewById(R.id.list_view);
@@ -231,12 +242,6 @@ public class MainActivity extends AppCompatActivity
                 break;
         }
         return super.onContextItemSelected(item);
-    }
-
-    public void onRestart(){
-        Log.e(TAG,"onRestart");
-        getBookInfo();
-        super.onRestart();
     }
 
     public void getBookInfo(){
@@ -349,38 +354,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
@@ -467,12 +440,28 @@ public class MainActivity extends AppCompatActivity
         }
         SharedPreferences sharedPreferences = context.getSharedPreferences("uid", Context.MODE_PRIVATE);
         String uid = sharedPreferences.getString("uid",null);
-        if (uid != null)
-            new CosService(context).upload(filePath,uid);
-        Toast.makeText(context,"备份成功",Toast.LENGTH_SHORT).show();
-        String updateTimeString = timedate(System.currentTimeMillis());
-        updateTime.setText("上次备份时间："+updateTimeString);
-        editor.putString("lastUpdateTime",updateTimeString).commit();
+        CosService cosService = null;
+        if (uid != null){
+            cosService =  new CosService(context);
+            cosService.upload(filePath,uid);
+        }
+        if (cosService!=null) {
+            cosService.setRequestNetwork(new RequestNetwork() {
+                @Override
+                public void success() {
+                    Message message = new Message();
+                    message.what = 2;
+                    handler.sendMessage(message);
+                }
+
+                @Override
+                public void fail(String errmsg) {
+                    Message message = new Message();
+                    message.what = 3;
+                    handler.sendMessage(message);
+                }
+            });
+        }
     }
 
     private class BaseUiListener implements IUiListener {
@@ -500,5 +489,43 @@ public class MainActivity extends AppCompatActivity
         public void onCancel() {
             Toast.makeText(getApplicationContext(), "onCancel", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    public void onRestart(){
+        Log.e(TAG,"onRestart");
+        getBookInfo();
+        super.onRestart();
     }
 }
