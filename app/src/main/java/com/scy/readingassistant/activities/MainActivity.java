@@ -119,7 +119,7 @@ public class MainActivity extends AppCompatActivity
                 case 2:
                     Toast.makeText(context, "备份成功", Toast.LENGTH_SHORT).show();
                     String updateTimeString = timedate(System.currentTimeMillis());
-                    updateTime.setText("上次备份时间：\n" + updateTimeString);
+                    updateTime.setText("上次同步时间：\n" + updateTimeString);
                     editor.putString("lastUpdateTime", updateTimeString).commit();
                     break;
                 case 3:
@@ -161,7 +161,7 @@ public class MainActivity extends AppCompatActivity
 
         View headerView = navigationView.getHeaderView(0);
         updateTime = headerView.findViewById(R.id.updateTime);
-        updateTime.setText("上次备份时间：\n"+sp.getString("lastUpdateTime","未备份"));
+        updateTime.setText("上次同步时间：\n"+sp.getString("lastUpdateTime","未备份"));
         Log.d(TAG, "initListView: "+updateTime);
 
         booklist = (ListView) findViewById(R.id.list_view);
@@ -363,53 +363,18 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent(MainActivity.this,LocalBook.class);
             startActivity(intent);
         } else if (id == R.id.nav_import) {      //导入备份
-            String filePath = "/storage/emulated/0/ReaderAssistant/";        //备份路径
-            SharedPreferences sharedPreferences = context.getSharedPreferences("uid", Context.MODE_PRIVATE);
-            String uid = sharedPreferences.getString("uid",null);
-            if (uid != null)
-                new CosService(context).download(filePath,uid);
-            try {
-                File file = new File(filePath+uid);
-                FileInputStream inputStream = new FileInputStream(file);
-                byte temp[] = new byte[1024];
-                StringBuilder sb = new StringBuilder("");
-                int len = 0;
-                while ((len = inputStream.read(temp)) > 0) {
-                    sb.append(new String(temp, 0, len));
-                }
-                Log.d("msg", "readSaveFile: \n" + sb.toString());
-                rebulid(context, sb.toString());
-                inputStream.close();
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-//            MultPermission(context);
-//            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-//            intent.setType("*/*");
-//            intent.addCategory(Intent.CATEGORY_OPENABLE);
-//            startActivityForResult(intent,2);
+            MultPermission(context);
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("*/*");
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            startActivityForResult(intent,2);
         } else if (id == R.id.nav_backup) {         //备份
             backupFunction();
         } else if (id == R.id.nav_about) {
             Intent intent = new Intent(MainActivity.this,AboutActivity.class);
             startActivity(intent);
         } else if (id == R.id.nav_send) {
-            String filePath = "/storage/emulated/0/ReaderAssistant/bak.txt";        //备份路径
-            File file = new File(filePath);
-            if (!file.exists()) {
-                Toast.makeText(context,"请先备份",Toast.LENGTH_SHORT).show();
-            }
-            else {
-                Uri uri = FileProvider.getUriForFile(
-                        this,
-                        "com.scy.readingassistant.fileprovider",
-                        file);
-                Intent sendIntent = new Intent(Intent.ACTION_SEND);
-                sendIntent.setType("application/txt");
-                sendIntent.putExtra(Intent.EXTRA_STREAM, uri);
-                startActivity(Intent.createChooser(sendIntent, file.getName()));
-            }
+            send();
         }else if (id == R.id.nav_login){
             mTencent = Tencent.createInstance("1106974967",getApplicationContext());
             mTencent.login(MainActivity.this,"all",new BaseUiListener());
@@ -417,10 +382,80 @@ public class MainActivity extends AppCompatActivity
             editor.remove("uid").commit();
             navigationView.getMenu().findItem(R.id.nav_login).setVisible(true);
             navigationView.getMenu().findItem(R.id.nav_logout).setVisible(false);
+        }else if (id == R.id.nav_synch){
+            synch();
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void synch(){
+        //拉取远程
+//            String filePath = "/storage/emulated/0/ReaderAssistant/";        //备份路径
+//            SharedPreferences sharedPreferences = context.getSharedPreferences("uid", Context.MODE_PRIVATE);
+//            String uid = sharedPreferences.getString("uid",null);
+//            if (uid != null)
+//                new CosService(context).download(filePath,uid);
+//            try {
+//                File file = new File(filePath+uid);
+//                FileInputStream inputStream = new FileInputStream(file);
+//                byte temp[] = new byte[1024];
+//                StringBuilder sb = new StringBuilder("");
+//                int len = 0;
+//                while ((len = inputStream.read(temp)) > 0) {
+//                    sb.append(new String(temp, 0, len));
+//                }
+//                Log.d("msg", "readSaveFile: \n" + sb.toString());
+//                rebulid(context, sb.toString());
+//                inputStream.close();
+//
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+        //获取本地
+        //        SharedPreferences sharedPreferences = context.getSharedPreferences("uid", Context.MODE_PRIVATE);
+//        String uid = sharedPreferences.getString("uid",null);
+//        CosService cosService = null;
+//        if (uid != null){
+//            cosService =  new CosService(context);
+//            cosService.upload(filePath,uid);
+//        }
+//        if (cosService!=null) {
+//            cosService.setRequestNetwork(new RequestNetwork() {
+//                @Override
+//                public void success() {
+//                    Message message = new Message();
+//                    message.what = 2;
+//                    handler.sendMessage(message);
+//                }
+//
+//                @Override
+//                public void fail(String errmsg) {
+//                    Message message = new Message();
+//                    message.what = 3;
+//                    handler.sendMessage(message);
+//                }
+//            });
+//        }
+    }
+
+    private void send(){
+        String filePath = "/storage/emulated/0/ReaderAssistant/bak.txt";        //备份路径
+        File file = new File(filePath);
+        if (!file.exists()) {
+            Toast.makeText(context,"请先备份",Toast.LENGTH_SHORT).show();
+        }
+        else {
+            Uri uri = FileProvider.getUriForFile(
+                    this,
+                    "com.scy.readingassistant.fileprovider",
+                    file);
+            Intent sendIntent = new Intent(Intent.ACTION_SEND);
+            sendIntent.setType("application/txt");
+            sendIntent.putExtra(Intent.EXTRA_STREAM, uri);
+            startActivity(Intent.createChooser(sendIntent, file.getName()));
+        }
     }
 
     private void backupFunction(){
@@ -442,30 +477,7 @@ public class MainActivity extends AppCompatActivity
         }catch (Exception e) {
             Log.e(TAG, "onNavigationItemSelected: ", e);
         }
-        SharedPreferences sharedPreferences = context.getSharedPreferences("uid", Context.MODE_PRIVATE);
-        String uid = sharedPreferences.getString("uid",null);
-        CosService cosService = null;
-        if (uid != null){
-            cosService =  new CosService(context);
-            cosService.upload(filePath,uid);
-        }
-        if (cosService!=null) {
-            cosService.setRequestNetwork(new RequestNetwork() {
-                @Override
-                public void success() {
-                    Message message = new Message();
-                    message.what = 2;
-                    handler.sendMessage(message);
-                }
 
-                @Override
-                public void fail(String errmsg) {
-                    Message message = new Message();
-                    message.what = 3;
-                    handler.sendMessage(message);
-                }
-            });
-        }
     }
 
     private class BaseUiListener implements IUiListener {
