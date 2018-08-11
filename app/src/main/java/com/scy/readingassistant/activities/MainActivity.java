@@ -399,7 +399,7 @@ public class MainActivity extends AppCompatActivity
             Toast.makeText(context,"请先登陆",Toast.LENGTH_SHORT).show();
             return;
         }
-        new synchTask(context).executeOnExecutor(Executors.newCachedThreadPool());
+        new synchTask(context,sp.getString("uid",null)).executeOnExecutor(Executors.newCachedThreadPool());
     }
 
     private void send(){

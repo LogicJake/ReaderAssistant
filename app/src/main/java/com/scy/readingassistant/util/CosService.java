@@ -22,12 +22,18 @@ public class CosService {
     String secretKey ="5wXt1xd3ECvNZVAYp5f094lCPN6lCPN6";
     long keyDuration = 600;                         //SecretKey 的有效时间，单位秒
     CosXmlService cosXmlService;
+    private RequestNetwork uploadrequestNetwork;
+    private RequestNetwork dowloadrequestNetwork;
 
-    public void setRequestNetwork(RequestNetwork requestNetwork) {
-        this.requestNetwork = requestNetwork;
+
+    public void setUploadRequestNetwork(RequestNetwork requestNetwork) {
+        this.uploadrequestNetwork = requestNetwork;
     }
 
-    private RequestNetwork requestNetwork;
+    public void setDownloadRequestNetwork(RequestNetwork requestNetwork) {
+        this.dowloadrequestNetwork = requestNetwork;
+    }
+
 
     public CosService(Context context){
         CosXmlServiceConfig serviceConfig = new CosXmlServiceConfig.Builder()
@@ -51,14 +57,16 @@ public class CosService {
             @Override
             public void onSuccess(CosXmlRequest request, CosXmlResult result) {
                 Log.w("TEST","success =" + result.accessUrl);
-                requestNetwork.success();
+                if (uploadrequestNetwork!=null)
+                    uploadrequestNetwork.success();
             }
 
             @Override
             public void onFail(CosXmlRequest cosXmlRequest, CosXmlClientException clientException, CosXmlServiceException serviceException)  {
                 String errorMsg = clientException != null ? clientException.toString() : serviceException.toString();
                 Log.w("TEST",errorMsg);
-                requestNetwork.fail(errorMsg);
+                if (uploadrequestNetwork!=null)
+                    uploadrequestNetwork.fail(errorMsg);
             }
         });
     }
@@ -74,14 +82,14 @@ public class CosService {
             @Override
             public void onSuccess(CosXmlRequest cosXmlRequest, CosXmlResult cosXmlResult) {
                 Log.w("TEST","success");
-                requestNetwork.success();
+                dowloadrequestNetwork.success();
             }
 
             @Override
             public void onFail(CosXmlRequest cosXmlRequest, CosXmlClientException clientException, CosXmlServiceException serviceException)  {
                 String errorMsg = clientException != null ? clientException.toString() : serviceException.toString();
                 Log.w("TEST",errorMsg);
-                requestNetwork.fail(errorMsg);
+                dowloadrequestNetwork.fail(errorMsg);
             }
         });
     }
