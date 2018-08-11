@@ -104,9 +104,6 @@ public class PdfViwerActivity extends AppCompatActivity implements View.OnClickL
 
         current_page = (TextView) findViewById(R.id.current_page);
         total_page = (TextView) findViewById(R.id.total_page);
-        jump = (ImageButton)findViewById(R.id.jump);
-        jump.setOnClickListener(this);
-        jump_page = (EditText) findViewById(R.id.jump_page);
 
         initPdf();
     }
@@ -213,12 +210,12 @@ public class PdfViwerActivity extends AppCompatActivity implements View.OnClickL
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.jump:
-                if(jump_page.getText().toString().length() == 0 )
-                    return;
-                int page = Integer.parseInt(jump_page.getText().toString())-1;
-                pdfView.jumpTo(page);
-                break;
+//            case R.id.jump:
+//                if(jump_page.getText().toString().length() == 0 )
+//                    return;
+//                int page = Integer.parseInt(jump_page.getText().toString())-1;
+//                pdfView.jumpTo(page);
+//                break;
             default:
                 break;
         }
