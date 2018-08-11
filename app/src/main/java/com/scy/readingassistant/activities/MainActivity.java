@@ -51,6 +51,7 @@ import static com.scy.readingassistant.util.BookTask.updatePath;
 import static com.scy.readingassistant.util.FileUtils.getFilePathByUri;
 import static com.scy.readingassistant.util.Util.MultPermission;
 import static com.scy.readingassistant.util.Util.createMyDir;
+import static com.scy.readingassistant.util.Util.formatJson;
 
 
 public class MainActivity extends AppCompatActivity
@@ -357,6 +358,7 @@ public class MainActivity extends AppCompatActivity
                 else
                     file.createNewFile();
                 String data = backup(context);
+                data = formatJson(data);
                 byte[] buffer = data.getBytes();
                 FileOutputStream fos = new FileOutputStream(file);
                 fos.write(buffer, 0, buffer.length);
