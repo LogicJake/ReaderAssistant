@@ -40,31 +40,27 @@ public class BookTask {
         editor.putString("path_"+uuid,path).commit();
     }
 
-    public static void rebulid(Context context,String data){
+    public static void rebulid(Context context,String data) throws JSONException {
         SharedPreferences sharedPreferences = context.getSharedPreferences("bookInfo", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
         Set<String> set = new HashSet<String>(sharedPreferences.getStringSet("list", new HashSet<String>()));         //获取所有书籍
+        JSONArray jsonArray = new JSONArray(data);
+        Log.e(TAG, "rebulid: "+jsonArray);
+        for(int i = 0; i<jsonArray.length(); i++){
+            JSONObject tmp = jsonArray.getJSONObject(i);
+            String uuid = tmp.getString("uid");
 
-        try {
-            JSONArray jsonArray = new JSONArray(data);
-            for(int i = 0; i<jsonArray.length(); i++){
-                JSONObject tmp = jsonArray.getJSONObject(i);
-                String uuid = tmp.getString("uid");
-
-                editor.putString("name_"+uuid,tmp.getString("name"));
-                editor.putLong("add_time_"+uuid,tmp.getLong("add_time"));
-                editor.putString("path_"+uuid,tmp.getString("path"));
-                editor.putString("author_"+uuid,tmp.getString("author"));
-                editor.putInt("current_page_"+uuid,tmp.getInt("current_page"));
-                editor.putInt("total_page_"+uuid,tmp.getInt("total_page"));
-                set.add(uuid);
-            }
-            editor.putStringSet("list",set);
-            editor.commit();
-        } catch (JSONException e) {
-            e.printStackTrace();
+            editor.putString("name_"+uuid,tmp.getString("name"));
+            editor.putLong("add_time_"+uuid,tmp.getLong("add_time"));
+            editor.putString("path_"+uuid,tmp.getString("path"));
+            editor.putString("author_"+uuid,tmp.getString("author"));
+            editor.putInt("current_page_"+uuid,tmp.getInt("current_page"));
+            editor.putInt("total_page_"+uuid,tmp.getInt("total_page"));
+            set.add(uuid);
         }
+        editor.putStringSet("list",set);
+        editor.commit();
     }
 
     public static String backup(Context context) {

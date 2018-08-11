@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -31,17 +30,9 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.scy.readingassistant.domain.BookInfo;
-import com.scy.readingassistant.adapter.MyAdapter;
 import com.scy.readingassistant.R;
-import com.scy.readingassistant.util.CosService;
-import com.tencent.connect.common.Constants;
-import com.tencent.tauth.IUiListener;
-import com.tencent.tauth.Tencent;
-import com.tencent.tauth.UiError;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.scy.readingassistant.adapter.MyAdapter;
+import com.scy.readingassistant.domain.BookInfo;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -71,7 +62,6 @@ public class MainActivity extends AppCompatActivity
     List<HashMap<String, Object>> recentList;
     private ListView booklist;
     private MyAdapter myAdapter;
-    private Tencent mTencent;
     private String uid;
     private NavigationView navigationView;
 
@@ -274,66 +264,61 @@ public class MainActivity extends AppCompatActivity
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == Constants.REQUEST_LOGIN)
-            Tencent.onActivityResultData(requestCode, resultCode, data, new BaseUiListener());
-        else
-        {
-            if (resultCode == Activity.RESULT_OK) {
-                Uri uri = data.getData();
-                String path = getFilePathByUri(this, uri);
-                if (path == null || !new File(path).exists()) {
-                    Log.e(TAG, path);
-                    Toast.makeText(this, "获取文件路径失败，请用系统文件管理器打开！", Toast.LENGTH_SHORT).show();
+        if (resultCode == Activity.RESULT_OK) {
+            Uri uri = data.getData();
+            String path = getFilePathByUri(this, uri);
+            if (path == null || !new File(path).exists()) {
+                Log.e(TAG, path);
+                Toast.makeText(this, "获取文件路径失败，请用系统文件管理器打开！", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Log.e(TAG, path);
+            String[] aa = path.split("/");
+            if (requestCode == 1) {
+                aa = aa[aa.length - 1].split("\\.");
+                String name = aa[0];
+                if (!aa[aa.length - 1].equals("pdf")) {
+                    Toast.makeText(context, "只支持添加pdf文件", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                Log.e(TAG, path);
-                String[] aa = path.split("/");
-                if (requestCode == 1) {
-                    aa = aa[aa.length - 1].split("\\.");
-                    String name = aa[0];
-                    if (!aa[aa.length - 1].equals("pdf")) {
-                        Toast.makeText(context, "只支持添加pdf文件", Toast.LENGTH_SHORT).show();
-                        return;
+                BookInfo book = new BookInfo(System.currentTimeMillis(), name, path, 1, 1, "未知");
+                String uid = addBook(context, book);          //存储
+                HashMap map = new HashMap<String, Object>();
+
+                map.put("uid", uid);
+                map.put("add_time", book.getAddTime());                       //添加时间
+                map.put("name", book.getName());                       //添加时间
+                map.put("path", book.getPath());
+                map.put("current_page", book.getCurrentPage());
+                map.put("total_page", book.getTotalPage());
+                map.put("author", book.getAuthor());
+
+                mListData.add(map);
+                Message message = new Message();
+                message.what = 1;
+                handler.sendMessage(message);
+            } else if (requestCode == 2) {
+                try {
+                    File file = new File(path);
+                    FileInputStream inputStream = new FileInputStream(file);
+                    byte temp[] = new byte[1024];
+                    StringBuilder sb = new StringBuilder("");
+                    int len = 0;
+                    while ((len = inputStream.read(temp)) > 0) {
+                        sb.append(new String(temp, 0, len));
                     }
-                    BookInfo book = new BookInfo(System.currentTimeMillis(), name, path, 1, 1, "未知");
-                    String uid = addBook(context, book);          //存储
-                    HashMap map = new HashMap<String, Object>();
-
-                    map.put("uid", uid);
-                    map.put("add_time", book.getAddTime());                       //添加时间
-                    map.put("name", book.getName());                       //添加时间
-                    map.put("path", book.getPath());
-                    map.put("current_page", book.getCurrentPage());
-                    map.put("total_page", book.getTotalPage());
-                    map.put("author", book.getAuthor());
-
-                    mListData.add(map);
-                    Message message = new Message();
-                    message.what = 1;
-                    handler.sendMessage(message);
-                } else if (requestCode == 2) {
-                    try {
-                        File file = new File(path);
-                        FileInputStream inputStream = new FileInputStream(file);
-                        byte temp[] = new byte[1024];
-                        StringBuilder sb = new StringBuilder("");
-                        int len = 0;
-                        while ((len = inputStream.read(temp)) > 0) {
-                            sb.append(new String(temp, 0, len));
-                        }
-                        Log.d("msg", "readSaveFile: \n" + sb.toString());
-                        rebulid(context, sb.toString());
-                        inputStream.close();
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    Log.d("msg", "readSaveFile: \n" + sb.toString());
+                    rebulid(context, sb.toString());
+                    inputStream.close();
                     Toast.makeText(context, "导入备份成功", Toast.LENGTH_SHORT).show();
                     getBookInfo();
-                } else if (requestCode == 3) {
-                    updatePath(context, uid, path);
-                    getBookInfo();
+                } catch (Exception e) {
+                    Toast.makeText(context, "导入备份失败", Toast.LENGTH_SHORT).show();
+                    e.printStackTrace();
                 }
+            } else if (requestCode == 3) {
+                updatePath(context, uid, path);
+                getBookInfo();
             }
         }
     }
@@ -379,32 +364,11 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent(MainActivity.this,LocalBook.class);
             startActivity(intent);
         } else if (id == R.id.nav_import) {      //导入备份
-            String filePath = "/storage/emulated/0/ReaderAssistant/";        //备份路径
-            SharedPreferences sharedPreferences = context.getSharedPreferences("uid", Context.MODE_PRIVATE);
-            String uid = sharedPreferences.getString("uid",null);
-            if (uid != null)
-                new CosService(context).download(filePath,uid);
-            try {
-                File file = new File(filePath+uid);
-                FileInputStream inputStream = new FileInputStream(file);
-                byte temp[] = new byte[1024];
-                StringBuilder sb = new StringBuilder("");
-                int len = 0;
-                while ((len = inputStream.read(temp)) > 0) {
-                    sb.append(new String(temp, 0, len));
-                }
-                Log.d("msg", "readSaveFile: \n" + sb.toString());
-                rebulid(context, sb.toString());
-                inputStream.close();
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-//            MultPermission(context);
-//            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-//            intent.setType("*/*");
-//            intent.addCategory(Intent.CATEGORY_OPENABLE);
-//            startActivityForResult(intent,2);
+            MultPermission(context);
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("*/*");
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            startActivityForResult(intent,2);
         } else if (id == R.id.nav_backup) {         //备份
             MultPermission(context);
             String filePath = "/storage/emulated/0/ReaderAssistant/bak.txt";        //备份路径
@@ -424,10 +388,6 @@ public class MainActivity extends AppCompatActivity
             }catch (Exception e) {
                 Log.e(TAG, "onNavigationItemSelected: ", e);
             }
-            SharedPreferences sharedPreferences = context.getSharedPreferences("uid", Context.MODE_PRIVATE);
-            String uid = sharedPreferences.getString("uid",null);
-            if (uid != null)
-                new CosService(context).upload(filePath,uid);
             Toast.makeText(context,"备份成功",Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_about) {
             Intent intent = new Intent(MainActivity.this,AboutActivity.class);
@@ -448,39 +408,9 @@ public class MainActivity extends AppCompatActivity
                 sendIntent.putExtra(Intent.EXTRA_STREAM, uri);
                 startActivity(Intent.createChooser(sendIntent, file.getName()));
             }
-        }else if (id == R.id.nav_login){
-            mTencent = Tencent.createInstance("1106974967",getApplicationContext());
-            mTencent.login(MainActivity.this,"all",new BaseUiListener());
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
-    }
-
-    private class BaseUiListener implements IUiListener {
-        public void onComplete(Object response) {
-            Log.v("----TAG--", "-------------"+response.toString());
-            try {
-                String openid = ((JSONObject)response).getString("openid");
-                SharedPreferences sharedPreferences = context.getSharedPreferences("uid", Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString("uid","qq"+openid);
-                editor.commit();
-                navigationView.getMenu().findItem(R.id.nav_login).setVisible(false);
-                navigationView.getMenu().findItem(R.id.nav_logout).setVisible(true);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        public void onError(UiError uiError) {
-            Toast.makeText(getApplicationContext(), "onError", Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        public void onCancel() {
-            Toast.makeText(getApplicationContext(), "onCancel", Toast.LENGTH_SHORT).show();
-        }
     }
 }

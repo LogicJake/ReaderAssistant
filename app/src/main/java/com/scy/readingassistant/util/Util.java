@@ -5,8 +5,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 
-import com.scy.readingassistant.view.PremissionDialog;
 import com.scy.readingassistant.R;
+import com.scy.readingassistant.view.PremissionDialog;
 import com.tbruyelle.rxpermissions2.Permission;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 
