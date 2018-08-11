@@ -212,7 +212,7 @@ public class BookTask {
             HashMap map = new HashMap<String,Object>();
             map.put("uid",sharedPreferences.getString("uuid_"+uid,null));                       //添加时间
             map.put("markName",sharedPreferences.getString("name_"+uid,"书签名没了？"));                       //添加时间
-            map.put("page",sharedPreferences.getString("page_"+uid,"页码没了？"));
+            map.put("page",sharedPreferences.getInt("page_"+uid,0));
             marklist.add(map);
         }
 

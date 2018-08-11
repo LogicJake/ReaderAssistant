@@ -65,6 +65,15 @@
             </LinearLayout>
 
         </LinearLayout>
-    </FrameLayout>
 
+        <ImageView
+            android:id="@+id/mark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|left"
+            android:visibility="gone"
+            android:layout_margin="@dimen/fab_margin"
+            android:src="@drawable/mark" />
+
+    </FrameLayout>
 </FrameLayout>

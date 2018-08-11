@@ -14,6 +14,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.github.barteksc.pdfviewer.PDFView;
@@ -23,6 +24,7 @@ import com.scy.readingassistant.R;
 
 import java.io.File;
 
+import static com.scy.readingassistant.util.BookTask.addBookMark;
 import static com.scy.readingassistant.util.BookTask.updatePage;
 
 
@@ -39,6 +41,8 @@ public class PdfViwerActivity extends AppCompatActivity implements View.OnClickL
     private TextView total_page;
     private TextView current_page;
     private boolean nightMode = false;
+
+    private ImageView mark;
 
     private final Runnable mHidePart2Runnable = new Runnable() {
         @SuppressLint("InlinedApi")
@@ -100,6 +104,7 @@ public class PdfViwerActivity extends AppCompatActivity implements View.OnClickL
 
         mVisible = true;
         mControlsView = findViewById(R.id.fullscreen_content_controls);
+        mark = (ImageView) findViewById(R.id.mark);
         pdfView = findViewById(R.id.pdfView);
 
         current_page = (TextView) findViewById(R.id.current_page);
@@ -254,6 +259,20 @@ public class PdfViwerActivity extends AppCompatActivity implements View.OnClickL
                     .create();
             dialog.show();
             return true;
+        }
+        if (id == R.id.action_add_mark){
+            String defaultName = current_page.getText().toString()+"/"+total_page.getText().toString();
+            addBookMark(context,uid,Integer.parseInt(current_page.getText().toString()),defaultName);
+            mark.setVisibility(View.VISIBLE);
+            mHideHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mark.setVisibility(View.GONE);
+                }
+            }, 1000);
+        }
+        if (id == R.id.action_all_mark){
+
         }
 
         return super.onOptionsItemSelected(item);
