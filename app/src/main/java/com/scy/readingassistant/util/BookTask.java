@@ -60,10 +60,11 @@ public class BookTask {
         }
         editor.putStringSet("list",set);
         editor.commit();
-        rebuildMark(context,new JSONObject(data).getJSONArray("bookInfo"));
+        rebuildMark(context,new JSONObject(data).getJSONArray("markInfo"));
     }
 
     private static void rebuildMark(Context context,JSONArray data) throws JSONException {
+        Log.e(TAG, "rebulid: "+data);
         SharedPreferences sharedPreferences = context.getSharedPreferences("markInfo", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
@@ -71,8 +72,8 @@ public class BookTask {
 
         for(int i = 0; i<data.length(); i++){
             JSONObject tmp = data.getJSONObject(i);
-            String uuid = tmp.getString("uuid");
-            String name = tmp.getString("name");
+            String uuid = tmp.getString("uid");
+            String name = tmp.getString("markName");
             int page = tmp.getInt("page");
             String uniqueId = uuid+page;
             markSet.add(uniqueId);
