@@ -2,17 +2,18 @@ package com.scy.readingassistant.activities;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.github.barteksc.pdfviewer.PDFView;
@@ -30,7 +31,6 @@ public class PdfViwerActivity extends AppCompatActivity implements View.OnClickL
     private Context context = this;
     private String uid;
     private static final boolean AUTO_HIDE = true;
-    private ImageButton jump;
     private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
 
     private static final int UI_ANIMATION_DELAY = 300;
@@ -38,7 +38,7 @@ public class PdfViwerActivity extends AppCompatActivity implements View.OnClickL
     private PDFView pdfView;
     private TextView total_page;
     private TextView current_page;
-    private EditText jump_page;
+    private boolean nightMode = false;
 
     private final Runnable mHidePart2Runnable = new Runnable() {
         @SuppressLint("InlinedApi")
@@ -104,9 +104,6 @@ public class PdfViwerActivity extends AppCompatActivity implements View.OnClickL
 
         current_page = (TextView) findViewById(R.id.current_page);
         total_page = (TextView) findViewById(R.id.total_page);
-        jump = (ImageButton)findViewById(R.id.jump);
-        jump.setOnClickListener(this);
-        jump_page = (EditText) findViewById(R.id.jump_page);
 
         initPdf();
     }
@@ -160,17 +157,6 @@ public class PdfViwerActivity extends AppCompatActivity implements View.OnClickL
         delayedHide(100);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == android.R.id.home) {
-            // This ID represents the Home or Up button.
-            NavUtils.navigateUpFromSameTask(this);
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
     private void toggle() {
         if (mVisible) {
             hide();
@@ -213,14 +199,64 @@ public class PdfViwerActivity extends AppCompatActivity implements View.OnClickL
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.jump:
-                if(jump_page.getText().toString().length() == 0 )
-                    return;
-                int page = Integer.parseInt(jump_page.getText().toString())-1;
-                pdfView.jumpTo(page);
-                break;
             default:
                 break;
         }
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_night) {
+            nightMode = !nightMode;
+            pdfView.setNightMode(nightMode);
+            hide();
+            return true;
+        }
+        if (id == R.id.action_jump){
+            View view = getLayoutInflater().inflate(R.layout.dialog_jump, null);
+            final EditText dialog_edit = (EditText) view.findViewById(R.id.dialog_edit);
+            final TextView pageNum = (TextView) view.findViewById(R.id.pageNum);
+            String pageSetText = "(1-"+total_page.getText()+")";
+            pageNum.setText(pageSetText);
+            AlertDialog dialog = new AlertDialog.Builder(this)
+                    .setTitle("跳转")
+                    .setView(view)
+                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            String pageStr = dialog_edit.getText().toString();
+                            if (pageStr.length() != 0) {
+                                pdfView.jumpTo(Integer.parseInt(pageStr)-1);
+                                hide();
+                            }
+                            dialog.dismiss();
+                        }
+                    })
+                    .create();
+            dialog.show();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
 }

@@ -26,41 +26,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center_horizontal"
-            android:background="@color/colorPrimary"
+            android:background="@color/colorPrimaryDark"
             android:orientation="horizontal"
             tools:ignore="UselessParent">
 
-
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:layout_weight="1">
-                <EditText
-                    android:id="@+id/jump_page"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/edit_bg"
-                    android:singleLine="true"
-                    android:hint="跳转页码"
-                    android:gravity="center"/>
-
-                <ImageButton
-                    android:id="@+id/jump"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="20dp"
-                    android:background="@drawable/jump"
-                    android:gravity="center"/>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:gravity="right"
-                android:layout_marginRight="10dp"
+                android:gravity="center"
+                android:layout_margin="10dp"
                 android:orientation="horizontal">
 
                 <TextView
@@ -68,6 +42,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:gravity="center"
+                    android:textSize="20dp"
                     android:text="1" />
 
                 <TextView
@@ -76,6 +51,7 @@
                     android:layout_marginRight="5dp"
                     android:layout_marginLeft="5dp"
                     android:gravity="center"
+                    android:textSize="20dp"
                     android:text="/" />
 
                 <TextView
@@ -83,10 +59,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:gravity="center"
-                    android:text="10" />
-
-
-
+                    android:text="10"
+                    android:textSize="20dp"
+                    />
             </LinearLayout>
 
         </LinearLayout>
