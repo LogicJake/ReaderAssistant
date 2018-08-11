@@ -22,7 +22,6 @@ public class BookTask {
 
     private static final String TAG = "BookTask";
 
-
     public static void updateNameAndAuthor(Context context, String uuid, String name, String author) {
         SharedPreferences sharedPreferences = context.getSharedPreferences("bookInfo", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -45,7 +44,7 @@ public class BookTask {
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
         Set<String> set = new HashSet<String>(sharedPreferences.getStringSet("list", new HashSet<String>()));         //获取所有书籍
-        JSONArray jsonArray = new JSONArray(data);
+        JSONArray jsonArray = new JSONObject(data).getJSONArray("bookInfo");
         Log.e(TAG, "rebulid: "+jsonArray);
         for(int i = 0; i<jsonArray.length(); i++){
             JSONObject tmp = jsonArray.getJSONObject(i);
@@ -61,12 +60,42 @@ public class BookTask {
         }
         editor.putStringSet("list",set);
         editor.commit();
+        rebuildMark(context,new JSONObject(data).getJSONArray("bookInfo"));
+    }
+
+    private static void rebuildMark(Context context,JSONArray data) throws JSONException {
+        SharedPreferences sharedPreferences = context.getSharedPreferences("markInfo", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        Set<String> markSet = new HashSet<String>(sharedPreferences.getStringSet("list", new HashSet<String>()));
+
+        for(int i = 0; i<data.length(); i++){
+            JSONObject tmp = data.getJSONObject(i);
+            String uuid = tmp.getString("uuid");
+            String name = tmp.getString("name");
+            int page = tmp.getInt("page");
+            String uniqueId = uuid+page;
+            markSet.add(uniqueId);
+            editor.putString("uuid_"+uniqueId,uuid);
+            editor.putString("name_"+uniqueId,name);
+            editor.putInt("page_"+uniqueId,page);
+        }
+        editor.putStringSet("list",markSet);
+        editor.commit();
     }
 
     public static String backup(Context context) {
-        JSONArray jsonArray = new JSONArray(getAllBook(context));
-        Log.e(TAG,jsonArray.toString());
-        return jsonArray.toString();
+        JSONObject res = new JSONObject();
+        JSONArray bookArray = new JSONArray(getAllBook(context));
+        JSONArray markArray = new JSONArray(getAllMarks(context));
+        try {
+            res.put("bookInfo",bookArray);
+            res.put("markInfo",markArray);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        Log.e(TAG,res.toString());
+        return res.toString();
     }
 
     public static void deleteBook(Context context,String uuid){
@@ -135,4 +164,58 @@ public class BookTask {
         editor.commit();
     }
 
+    public static void addBookMark(Context context,String uuid,int page,String markName){
+        SharedPreferences sharedPreferences = context.getSharedPreferences("markInfo", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        Set<String> markSet = new HashSet<String>(sharedPreferences.getStringSet("list", new HashSet<String>()));
+        String uniqueId = uuid+page;
+        markSet.add(uniqueId);
+        editor.putStringSet("list",markSet);
+        editor.putString("uuid_"+uniqueId,uuid);
+        editor.putString("name_"+uniqueId,markName);
+        editor.putInt("page_"+uniqueId,page);
+        editor.commit();
+    }
+
+    public static void deleteBookMark(Context context,String uuid,int page){
+        SharedPreferences sharedPreferences = context.getSharedPreferences("markInfo", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        Set<String> markSet = new HashSet<String>(sharedPreferences.getStringSet("list", new HashSet<String>()));
+        String uniqueId = uuid+page;
+
+        markSet.remove(uniqueId);
+        editor.putStringSet("list",markSet);
+        editor.remove("name_"+uniqueId);
+        editor.remove("uuid_"+uniqueId);
+        editor.remove("page_"+uniqueId);
+        editor.commit();
+    }
+
+    public static void updateBookMarkName(Context context,String uuid,int page,String markName){
+        SharedPreferences sharedPreferences = context.getSharedPreferences("markInfo", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        String uniqueId = uuid+page;
+        editor.putString("name_"+uniqueId,markName);
+        editor.commit();
+    }
+
+    public static List<HashMap<String, Object>> getAllMarks(Context context){
+        SharedPreferences sharedPreferences = context.getSharedPreferences("markInfo", Context.MODE_PRIVATE);
+
+        List<HashMap<String, Object>> marklist = new ArrayList<HashMap<String, Object>>();
+
+        Set<String> set = new HashSet<String>(sharedPreferences.getStringSet("list", new HashSet<String>()));         //获取所有书籍
+        for (String uid : set) {
+            HashMap map = new HashMap<String,Object>();
+            map.put("uid",sharedPreferences.getString("uuid_"+uid,null));                       //添加时间
+            map.put("markName",sharedPreferences.getString("name_"+uid,"书签名没了？"));                       //添加时间
+            map.put("page",sharedPreferences.getString("page_"+uid,"页码没了？"));
+            marklist.add(map);
+        }
+
+        return marklist;
+    }
 }
