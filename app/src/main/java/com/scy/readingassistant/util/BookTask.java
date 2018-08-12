@@ -44,7 +44,14 @@ public class BookTask {
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
         Set<String> set = new HashSet<String>(sharedPreferences.getStringSet("list", new HashSet<String>()));         //获取所有书籍
-        JSONArray jsonArray = new JSONObject(data).getJSONArray("bookInfo");
+        JSONArray jsonArray = null;
+        if (!data.contains("bookInfo") && !data.contains("markInfo")){
+            //旧配置文件
+            jsonArray = new JSONArray(data);
+        } else{
+            jsonArray = new JSONObject(data).getJSONArray("bookInfo");
+            rebuildMark(context,new JSONObject(data).getJSONArray("markInfo"));
+        }
         Log.e(TAG, "rebulid: "+jsonArray);
         for(int i = 0; i<jsonArray.length(); i++){
             JSONObject tmp = jsonArray.getJSONObject(i);
@@ -60,7 +67,6 @@ public class BookTask {
         }
         editor.putStringSet("list",set);
         editor.commit();
-        rebuildMark(context,new JSONObject(data).getJSONArray("markInfo"));
     }
 
     private static void rebuildMark(Context context,JSONArray data) throws JSONException {
