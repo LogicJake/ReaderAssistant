@@ -66,11 +66,50 @@ public class Util {
     }
 
     public static String timedate(String time) {
+        if (time.length() < 10)
+            return "时间错误";
+        time = time.substring(0,10);
         SimpleDateFormat sdr = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         @SuppressWarnings("unused")
         int i = Integer.parseInt(time);
         String times = sdr.format(new Date(i * 1000L));
         return times;
+    }
 
+    public static String formatJson(String content) {
+        StringBuffer sb = new StringBuffer();
+        int index = 0;
+        int count = 0;
+        while(index < content.length()){
+            char ch = content.charAt(index);
+            if(ch == '{' || ch == '['){
+                sb.append(ch);
+                sb.append('\n');
+                count++;
+                for (int i = 0; i < count; i++) {
+                    sb.append('\t');
+                }
+            }
+            else if(ch == '}' || ch == ']'){
+                sb.append('\n');
+                count--;
+                for (int i = 0; i < count; i++) {
+                    sb.append('\t');
+                }
+                sb.append(ch);
+            }
+            else if(ch == ','){
+                sb.append(ch);
+                sb.append('\n');
+                for (int i = 0; i < count; i++) {
+                    sb.append('\t');
+                }
+            }
+            else {
+                sb.append(ch);
+            }
+            index ++;
+        }
+        return sb.toString();
     }
 }

@@ -11,4 +11,14 @@
         android:orderInCategory="100"
         android:title="跳转"
         app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_add_mark"
+        android:orderInCategory="100"
+        android:title="插入书签"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_all_mark"
+        android:orderInCategory="100"
+        android:title="所有书签"
+        app:showAsAction="ifRoom" />
 </menu>
