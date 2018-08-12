@@ -24,7 +24,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.scy.readingassistant.R;
-import com.scy.readingassistant.adapter.MyAdapter;
+import com.scy.readingassistant.adapter.BookAdapter;
 import com.scy.readingassistant.domain.BookInfo;
 
 import java.io.File;
@@ -48,7 +48,7 @@ public class LocalBook extends AppCompatActivity implements View.OnClickListener
     private static final String TAG = "LocalBook";
     private List<HashMap<String, Object>> mListData;
     private ListView booklist;
-    private MyAdapter myAdapter;
+    private BookAdapter bookAdapter;
     private String uid;
 
 
@@ -71,7 +71,6 @@ public class LocalBook extends AppCompatActivity implements View.OnClickListener
 
         @Override
         public int compare(HashMap<String, Object> lhs, HashMap<String, Object> rhs) {
-            // TODO Auto-generated method stub
             //按照时间顺序最新的在上面
             long a = (Long) lhs.get("add_time");
             long b = (Long) rhs.get("add_time");
@@ -94,8 +93,8 @@ public class LocalBook extends AppCompatActivity implements View.OnClickListener
                 case 1:
                     Collections.sort(mListData,new LocalBook.Order());
 
-                    myAdapter = new MyAdapter(context,mListData);
-                    booklist.setAdapter(myAdapter);
+                    bookAdapter = new BookAdapter(context,mListData);
+                    booklist.setAdapter(bookAdapter);
                     setListViewHeightBasedOnChildren(booklist);
                     break;
 

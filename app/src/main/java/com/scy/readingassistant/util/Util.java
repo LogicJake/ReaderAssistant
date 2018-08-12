@@ -66,6 +66,9 @@ public class Util {
     }
 
     public static String timedate(String time) {
+        if (time.length() < 10)
+            return "时间错误";
+        time = time.substring(0,10);
         SimpleDateFormat sdr = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         @SuppressWarnings("unused")
         int i = Integer.parseInt(time);

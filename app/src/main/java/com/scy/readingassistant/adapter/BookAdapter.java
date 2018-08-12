@@ -14,11 +14,11 @@ import java.util.List;
 
 import static com.scy.readingassistant.util.Util.timedate;
 
-public class MyAdapter extends BaseAdapter {
+public class BookAdapter extends BaseAdapter {
     private Context context;
     List<HashMap<String, Object>> list;
 
-    public MyAdapter(Context context, List<HashMap<String, Object>> list) {
+    public BookAdapter(Context context, List<HashMap<String, Object>> list) {
         this.context = context;
         this.list = list;
     }
@@ -42,7 +42,7 @@ public class MyAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         ViewHolder holder = null;
         if (convertView == null) {
-            convertView = View.inflate(context, R.layout.item_list, null);
+            convertView = View.inflate(context, R.layout.book_item, null);
             holder = new ViewHolder();
             holder.name = (TextView) convertView.findViewById(R.id.item_name);
             holder.path = (TextView) convertView.findViewById(R.id.item_path);
@@ -61,7 +61,7 @@ public class MyAdapter extends BaseAdapter {
         holder.progressBar.setProgress((int)(num*100));
         holder.progress.setText(Integer.toString((int)list.get(position).get("current_page"))+"/"+Integer.toString((int)list.get(position).get("total_page")));
         holder.author.setText("作者："+(String)list.get(position).get("author"));
-        holder.add_time.setText(timedate(Long.toString((long)list.get(position).get("add_time")).substring(0,10)));
+        holder.add_time.setText(timedate(Long.toString((long)list.get(position).get("add_time"))));
 
         return convertView;
     }

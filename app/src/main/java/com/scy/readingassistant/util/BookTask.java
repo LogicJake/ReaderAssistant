@@ -176,6 +176,7 @@ public class BookTask {
         editor.putString("uuid_"+uniqueId,uuid);
         editor.putString("name_"+uniqueId,markName);
         editor.putInt("page_"+uniqueId,page);
+        editor.putLong("add_time_"+uniqueId,System.currentTimeMillis());
         editor.commit();
     }
 
@@ -191,6 +192,7 @@ public class BookTask {
         editor.remove("name_"+uniqueId);
         editor.remove("uuid_"+uniqueId);
         editor.remove("page_"+uniqueId);
+        editor.remove("add_time_"+uniqueId);
         editor.commit();
     }
 
@@ -214,7 +216,29 @@ public class BookTask {
             map.put("uid",sharedPreferences.getString("uuid_"+uid,null));                       //添加时间
             map.put("markName",sharedPreferences.getString("name_"+uid,"书签名没了？"));                       //添加时间
             map.put("page",sharedPreferences.getInt("page_"+uid,0));
+            map.put("addTime",sharedPreferences.getLong("add_time_"+uid,0));
             marklist.add(map);
+        }
+
+        return marklist;
+    }
+
+    public static List<HashMap<String, Object>> getAllMarksByUuid(Context context,String uuid){
+        SharedPreferences sharedPreferences = context.getSharedPreferences("markInfo", Context.MODE_PRIVATE);
+
+        List<HashMap<String, Object>> marklist = new ArrayList<HashMap<String, Object>>();
+
+        Set<String> set = new HashSet<String>(sharedPreferences.getStringSet("list", new HashSet<String>()));         //获取所有书籍
+        for (String uid : set) {
+            String tuuid = sharedPreferences.getString("uuid_"+uid,null);
+            if (tuuid != null && tuuid.equals(uuid)){
+                HashMap map = new HashMap<String,Object>();
+                map.put("uid",sharedPreferences.getString("uuid_"+uid,null));                       //添加时间
+                map.put("markName",sharedPreferences.getString("name_"+uid,"书签名没了？"));                       //添加时间
+                map.put("page",sharedPreferences.getInt("page_"+uid,0));
+                map.put("addTime",sharedPreferences.getLong("add_time_"+uid,0));
+                marklist.add(map);
+            }
         }
 
         return marklist;

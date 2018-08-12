@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".activities.PdfViwerActivity">
 
     <!-- The primary full-screen view. This can be replaced with whatever view
@@ -73,7 +74,7 @@
             android:layout_gravity="top|left"
             android:visibility="gone"
             android:layout_margin="@dimen/fab_margin"
-            android:src="@drawable/mark" />
+            app:srcCompat="@drawable/mark" />
 
     </FrameLayout>
 </FrameLayout>

@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.InputType;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -16,6 +17,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.github.barteksc.pdfviewer.PDFView;
 import com.github.barteksc.pdfviewer.listener.OnLoadCompleteListener;
@@ -29,7 +31,7 @@ import static com.scy.readingassistant.util.BookTask.updatePage;
 
 
 public class PdfViwerActivity extends AppCompatActivity implements View.OnClickListener {
-
+    private static final String TAG = "PdfViwerActivity";
     private Context context = this;
     private String uid;
     private static final boolean AUTO_HIDE = true;
@@ -233,6 +235,7 @@ public class PdfViwerActivity extends AppCompatActivity implements View.OnClickL
         if (id == R.id.action_jump){
             View view = getLayoutInflater().inflate(R.layout.dialog_jump, null);
             final EditText dialog_edit = (EditText) view.findViewById(R.id.dialog_edit);
+            dialog_edit.setInputType(InputType.TYPE_CLASS_NUMBER);
             final TextView pageNum = (TextView) view.findViewById(R.id.pageNum);
             String pageSetText = "(1-"+total_page.getText()+")";
             pageNum.setText(pageSetText);
@@ -268,14 +271,25 @@ public class PdfViwerActivity extends AppCompatActivity implements View.OnClickL
                 @Override
                 public void run() {
                     mark.setVisibility(View.GONE);
+                    Toast.makeText(context,"插入书签成功",Toast.LENGTH_SHORT).show();
                 }
             }, 1000);
         }
         if (id == R.id.action_all_mark){
-
+            Intent intent = new Intent(PdfViwerActivity.this,AllMarkActivity.class);
+            intent.putExtra("uuid",uid);
+            intent.putExtra("total_page",total_page.getText().toString());
+            startActivityForResult(intent,1);
         }
-
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected  void onActivityResult(int requestCode, int resultCode, Intent data)  {
+        if (resultCode == RESULT_OK){
+            pdfView.jumpTo(data.getIntExtra("jump_page",Integer.parseInt(current_page.getText().toString())));
+            hide();
+        }
+        super.onActivityResult(requestCode, resultCode,  data);
+    }
 }

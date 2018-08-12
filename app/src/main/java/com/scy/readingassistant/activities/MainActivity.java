@@ -30,7 +30,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.scy.readingassistant.R;
-import com.scy.readingassistant.adapter.MyAdapter;
+import com.scy.readingassistant.adapter.BookAdapter;
 import com.scy.readingassistant.domain.BookInfo;
 
 import java.io.File;
@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity
     private List<HashMap<String, Object>> mListData;
     List<HashMap<String, Object>> recentList;
     private ListView booklist;
-    private MyAdapter myAdapter;
+    private BookAdapter bookAdapter;
     private String uid;
     private NavigationView navigationView;
 
@@ -69,7 +69,6 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         public int compare(HashMap<String, Object> lhs, HashMap<String, Object> rhs) {
-            // TODO Auto-generated method stub
             //按照时间顺序最新的在上面
             long a = (Long) lhs.get("add_time");
             long b = (Long) rhs.get("add_time");
@@ -82,7 +81,6 @@ public class MainActivity extends AppCompatActivity
                 return -1;
             }
         }
-
     }
 
     private Handler handler = new Handler() {
@@ -91,13 +89,12 @@ public class MainActivity extends AppCompatActivity
             switch (msg.what) {
                 case 1:
                     Collections.sort(mListData, new Order());
-                    System.out.println(mListData);
                     if (mListData.size() > 5)
                         recentList = mListData.subList(0, 5);
                     else
                         recentList = mListData;
-                    myAdapter = new MyAdapter(context, recentList);
-                    booklist.setAdapter(myAdapter);
+                    bookAdapter = new BookAdapter(context, recentList);
+                    booklist.setAdapter(bookAdapter);
                     setListViewHeightBasedOnChildren(booklist);
                     break;
 

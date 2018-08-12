@@ -12,7 +12,6 @@
         android:roundIcon="@drawable/icon"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="com.scy.readingassistant.fileprovider"
@@ -29,6 +28,7 @@
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -42,13 +42,17 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.scy.readingassistant.activities.MainActivity" />
         </activity>
-        <activity android:name=".activities.LocalBook"
-            android:parentActivityName=".activities.MainActivity"
-            android:label="本地书籍">
-
+        <activity
+            android:name=".activities.LocalBook"
+            android:label="本地书籍"
+            android:parentActivityName=".activities.MainActivity"></activity>
+        <activity
+            android:name=".activities.AboutActivity"
+            android:theme="@style/AppTheme.MaterialAboutActivity" />
+        <activity
+            android:name=".activities.AllMarkActivity"
+            android:label="所有书签">
         </activity>
-        <activity android:name=".activities.AboutActivity"
-            android:theme="@style/AppTheme.MaterialAboutActivity"/>
     </application>
 
 </manifest>
